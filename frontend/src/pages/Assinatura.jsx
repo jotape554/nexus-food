@@ -6,6 +6,8 @@ function formatarMoeda(valor) {
   return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+const NOME_PLANO = { BASICO: 'Básico', PROFISSIONAL: 'Profissional', PREMIUM: 'Premium' };
+
 const STATUS_LABEL = {
   TRIAL: 'Período de teste',
   ATIVA: 'Ativa',
@@ -143,7 +145,7 @@ export default function Assinatura() {
           return (
             <div key={p.plano} className="metric-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <div className="rotulo">{p.plano}</div>
+                <div className="rotulo">{NOME_PLANO[p.plano] || p.plano}</div>
                 <div className="valor" style={{ fontSize: '1.6rem' }}>
                   {formatarMoeda(p.precoMensal)}<span style={{ fontFamily: 'var(--fonte-corpo)', fontSize: '0.85rem', color: 'var(--texto-suave)' }}>/mês</span>
                 </div>

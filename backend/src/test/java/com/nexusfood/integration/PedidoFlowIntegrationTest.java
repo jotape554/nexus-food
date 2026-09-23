@@ -319,4 +319,19 @@ class PedidoFlowIntegrationTest {
         // clientes com o mesmo telefone são independentes por restaurante
         assertThat(clienteRepository.findAll().stream().filter(c -> c.getTelefone().equals("5511900001111")).count()).isEqualTo(1);
     }
+
+    @Test
+    void listaEBuscaDeClientes() throws Exception {
+        Sessao s = registrar("clientes@teste.com");
+        configurar(s, null);
+        long produto = criarProduto(s, "Margherita", "45.00");
+        pedir(s.slug(), UUID.randomUUID().toString(), "(11) 91234-5678", "RETIRADA", item(produto, 1), null).andExpect(status().isOk());
+
+        api(s, get("/api/clientes"), null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].nome").value("Maria"));
+        api(s, get("/api/clientes?busca=mar"), null).andExpect(jsonPath("$.content", hasSize(1)));
+        api(s, get("/api/clientes?busca=(11) 91234"), null).andExpect(jsonPath("$.content", hasSize(1)));
+        api(s, get("/api/clientes?busca=joao"), null).andExpect(jsonPath("$.content", hasSize(0)));
+    }
 }

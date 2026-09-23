@@ -823,6 +823,7 @@ label {
 
 .categoria-cabecalho { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 8px; flex-wrap: wrap; gap: 8px; }
 .categoria-cabecalho h3 { margin: 0; }
+.tabela-cardapio { table-layout: fixed; width: 100%; }
 .descricao-produto { font-size: 0.82rem; color: var(--texto-suave); max-width: 520px; }
 
 .form-inline { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }

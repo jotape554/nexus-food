@@ -54,13 +54,15 @@ public class ClienteService {
     }
 
     public Page<Cliente> listar(String busca, Pageable pageable) {
-        String termo = (busca == null || busca.isBlank()) ? null : busca.trim();
-        if (termo != null) {
-            String digitos = termo.replaceAll("\\D", "");
-            if (!digitos.isEmpty() && digitos.length() == termo.replaceAll("[\\s()+-]", "").length()) {
-                termo = digitos; // busca por telefone: ignora máscara
-            }
+        Long restauranteId = SecurityUtils.restauranteAtualId();
+        if (busca == null || busca.isBlank()) {
+            return clienteRepository.findAllByRestauranteIdOrderByNomeAsc(restauranteId, pageable);
         }
-        return clienteRepository.buscar(SecurityUtils.restauranteAtualId(), termo, pageable);
+        String termo = busca.trim();
+        String digitos = termo.replaceAll("\\D", "");
+        if (!digitos.isEmpty() && digitos.length() == termo.replaceAll("[\\s()+-]", "").length()) {
+            termo = digitos; // busca por telefone: ignora máscara
+        }
+        return clienteRepository.buscar(restauranteId, termo, pageable);
     }
 }

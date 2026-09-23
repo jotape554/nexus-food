@@ -119,7 +119,13 @@ export default function Cardapio() {
             {daCategoria.length === 0 ? (
               <EstadoVazio mensagem="Nenhum produto nesta categoria." />
             ) : (
-              <table>
+              <table className="tabela-cardapio">
+                <colgroup>
+                  <col />
+                  <col style={{ width: 120 }} />
+                  <col style={{ width: 130 }} />
+                  {podeEditar && <col style={{ width: 240 }} />}
+                </colgroup>
                 <tbody>
                   {daCategoria.map((p) => (
                     <tr key={p.id}>
