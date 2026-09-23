@@ -1,0 +1,31 @@
+:root {
+  /* cores — tinta escura + papel quente, com o laranja-páprica como cor de ação */
+  --tinta: #17160F;
+  --tinta-suave: #23221A;
+  --papel: #F6F4EF;
+  --papel-forte: #ECE8DE;
+  --latao: #D9622B;
+  --latao-forte: #A94A1C;
+  --latao-suave: #FBE5D6;
+  --verde-navalha: #33453A;
+  --vermelho-couro: #B0473A;
+  --texto: #1C1B16;
+  --texto-suave: #6B6656;
+  --branco: #FFFFFF;
+  --borda: #E5E1D6;
+  --borda-forte: #D8D1BF;
+
+  --fonte-titulo: 'Fraunces', Georgia, serif;
+  --fonte-corpo: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --radius-full: 999px;
+
+  --sombra-sm: 0 1px 2px rgba(23, 22, 15, 0.05);
+  --sombra: 0 4px 16px rgba(23, 22, 15, 0.06), 0 1px 2px rgba(23, 22, 15, 0.05);
+  --sombra-lg: 0 16px 40px rgba(23, 22, 15, 0.14);
+
+  --transicao: 160ms ease;
+}

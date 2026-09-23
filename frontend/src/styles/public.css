@@ -1,0 +1,245 @@
+.pub-shell {
+  min-height: 100vh;
+  background: var(--papel);
+}
+
+.pub-header {
+  background: var(--tinta);
+  color: var(--papel);
+  padding: 56px 24px 76px;
+  text-align: center;
+}
+
+.pub-header h1 {
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  color: var(--papel);
+  margin-bottom: 6px;
+}
+
+.pub-header .latao { color: var(--latao); }
+
+.pub-header p {
+  color: rgba(239,235,226,0.72);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.pub-content {
+  max-width: 640px;
+  margin: -48px auto 60px;
+  padding: 0 20px;
+}
+
+.pub-card {
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--sombra-lg);
+  padding: 32px;
+}
+
+.pub-passos {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.pub-passo {
+  flex: 1;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--borda);
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: border-color var(--transicao), color var(--transicao);
+}
+
+.pub-passo.ativo {
+  border-color: var(--latao);
+  color: var(--texto);
+  font-weight: 700;
+}
+
+.pub-passo.feito {
+  border-color: var(--verde-navalha);
+}
+
+.opcao-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.opcao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 18px;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--radius);
+  background: var(--branco);
+  text-align: left;
+  width: 100%;
+  font-family: var(--fonte-corpo);
+  font-size: 0.95rem;
+  transition: border-color var(--transicao), background var(--transicao), transform var(--transicao);
+}
+
+.opcao:hover { border-color: var(--latao); transform: translateY(-1px); }
+
+.opcao.selecionada {
+  border-color: var(--latao);
+  background: var(--latao-suave);
+}
+
+.opcao .preco { color: var(--texto-suave); font-size: 0.88rem; }
+
+.horarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 8px;
+}
+
+.horario-slot {
+  padding: 10px 0;
+  text-align: center;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--radius-sm);
+  background: var(--branco);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: border-color var(--transicao), background var(--transicao), color var(--transicao);
+}
+
+.horario-slot:hover { border-color: var(--latao); }
+.horario-slot.selecionado { background: var(--latao); border-color: var(--latao); color: var(--tinta); font-weight: 700; }
+
+.pub-confirmacao {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.pub-confirmacao .icone {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--verde-navalha);
+  color: var(--papel);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 18px;
+  font-size: 1.5rem;
+  box-shadow: var(--sombra);
+}
+
+/* ---------- Nexus Food: cardápio público ---------- */
+
+.pub-header { padding: 36px 20px 64px; }
+.logo-restaurante { width: 72px; height: 72px; object-fit: cover; border-radius: 50%; margin-bottom: 10px; border: 2px solid rgba(255,255,255,0.2); }
+.status-loja { color: #F2B8A8; font-weight: 600; }
+.status-loja.aberta { color: #9FE0B5; }
+
+.cardapio-conteudo { padding-bottom: 96px; }
+.chips-categorias {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.chips-categorias a {
+  white-space: nowrap;
+  background: var(--branco);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--radius-full);
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--sombra-sm);
+}
+
+.categoria-publica { padding: 20px; margin-bottom: 16px; scroll-margin-top: 60px; }
+.categoria-publica h2 { font-size: 1.3rem; margin-bottom: 8px; }
+
+.produto-publico {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--borda);
+}
+.produto-publico-texto { flex: 1; min-width: 0; }
+.produto-publico-texto p { margin: 4px 0; font-size: 0.85rem; color: var(--texto-suave); }
+.produto-publico-texto strong { display: block; }
+.produto-publico-texto .preco { display: block; margin-top: 2px; font-weight: 700; }
+.produto-publico img { width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); }
+.produto-publico.esgotado { opacity: 0.55; }
+
+.btn-adicionar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--latao);
+  color: var(--tinta);
+  font-size: 1.1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.selo-esgotado { font-size: 0.78rem; font-weight: 700; color: var(--vermelho-couro); flex-shrink: 0; }
+
+.barra-sacola {
+  position: fixed;
+  left: 16px; right: 16px; bottom: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--tinta);
+  color: var(--papel);
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: var(--sombra-lg);
+  z-index: 5;
+}
+
+.item-sacola { padding: 12px 0; border-bottom: 1px solid var(--borda); }
+.item-sacola-linha { display: flex; align-items: center; gap: 12px; }
+.item-sacola-linha .nome { flex: 1; font-weight: 600; }
+.controle-qtd { display: flex; align-items: center; border: 1px solid var(--borda-forte); border-radius: var(--radius-full); }
+.controle-qtd button { border: none; background: none; width: 32px; height: 32px; font-size: 1.1rem; }
+.controle-qtd span { min-width: 20px; text-align: center; font-weight: 700; }
+.obs-item { margin-top: 8px; width: 100%; font-size: 0.85rem; }
+
+.opcoes-linha { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); margin-bottom: 16px; }
+.opcoes-linha .opcao { justify-content: center; }
+
+.resumo-sacola { margin: 20px 0 8px; padding-top: 12px; border-top: 1px solid var(--borda); }
+.resumo-sacola div { display: flex; justify-content: space-between; padding: 3px 0; }
+.resumo-sacola .total { font-weight: 700; font-size: 1.1rem; }
+.aviso-minimo { color: var(--latao-forte); font-weight: 600; font-size: 0.9rem; }
+.btn-enviar { width: 100%; justify-content: center; padding: 14px; font-size: 1rem; margin-top: 12px; }
+
+.previsao { font-size: 1rem; }
+.etapas-pedido { list-style: none; padding: 0; margin: 16px 0; }
+.etapas-pedido li { display: flex; align-items: center; gap: 12px; padding: 8px 0; color: var(--texto-suave); }
+.etapas-pedido .marcador { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--borda-forte); flex-shrink: 0; }
+.etapas-pedido li.feita { color: var(--texto); font-weight: 600; }
+.etapas-pedido li.feita .marcador { background: var(--verde-navalha); border-color: var(--verde-navalha); }
+.etapas-pedido .etapa-nome { flex: 1; }
+.etapas-pedido .hora { font-variant-numeric: tabular-nums; font-size: 0.85rem; }
+.atualiza { font-size: 0.8rem; color: var(--texto-suave); }
+.acoes-acompanhamento { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+.tabela-itens { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.tabela-itens td { padding: 6px 4px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+.tabela-itens tr.total td { font-weight: 700; border-bottom: none; }
+.obs { font-size: 0.8rem; color: var(--latao-forte); }
+
+@media (max-width: 600px) {
+  .pub-content { padding: 0 12px; }
+  .pub-card { padding: 20px 16px; }
+}
