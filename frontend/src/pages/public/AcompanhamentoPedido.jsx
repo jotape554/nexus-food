@@ -1,7 +1,8 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
+import Icone from '../../components/Icone';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/http';
-import { moeda, hora, MODALIDADE_LABEL, PAGAMENTO_LABEL, MOTIVO_CANCELAMENTO_LABEL } from '../../api/formato';
+import { moeda, hora, numeroPedido, MODALIDADE_LABEL, PAGAMENTO_LABEL, MOTIVO_CANCELAMENTO_LABEL } from '../../api/formato';
 import '../../styles/public.css';
 
 function etapas(pedido) {
@@ -16,8 +17,45 @@ function etapas(pedido) {
   return lista;
 }
 
+/** Mostrada uma única vez, logo depois de o cliente fazer o pedido. */
+function Confirmacao({ pedido, endereco, onAcompanhar }) {
+  return (
+    <div className="pub-shell">
+      <main className="pub-content confirmacao">
+        <div className="pub-card">
+          <div className="confirmacao-icone"><Icone nome="check" tamanho={30} /></div>
+          <h1>Pedido realizado!</h1>
+          <p className="confirmacao-numero">Pedido {numeroPedido(pedido.numeroDia)}</p>
+          <p className="ajuda">Seu pedido foi enviado para <strong>{pedido.restauranteNome}</strong>. Assim que o restaurante aceitar, você vê aqui.</p>
+
+          <dl className="confirmacao-dados">
+            <div>
+              <dt>{MODALIDADE_LABEL[pedido.modalidade]}</dt>
+              <dd>{endereco || (pedido.modalidade === 'RETIRADA' ? `Pronto por volta das ${hora(pedido.prontoPrevistoPara)}` : 'No restaurante')}</dd>
+            </div>
+            <div>
+              <dt>Pagamento</dt>
+              <dd>{PAGAMENTO_LABEL[pedido.formaPagamento]}, {pedido.modalidade === 'ENTREGA' ? 'na entrega' : 'no balcão'}</dd>
+            </div>
+            <div className="total">
+              <dt>Total</dt>
+              <dd>{moeda(pedido.total)}</dd>
+            </div>
+          </dl>
+
+          <button className="btn btn-latao btn-enviar" onClick={onAcompanhar}>Acompanhar pedido →</button>
+          <p className="ajuda pequena">Guarde o link desta página: por ele você acompanha o pedido a qualquer momento.</p>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export default function AcompanhamentoPedido() {
   const { codigo } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const confirmacao = location.state?.confirmacao;
   const { data: pedido, isError } = useQuery({
     queryKey: ['acompanhamento', codigo],
     queryFn: () => api.publica.get(`/public/pedidos/${codigo}`),
@@ -32,6 +70,16 @@ export default function AcompanhamentoPedido() {
   }
   if (!pedido) return <div style={{ padding: 40, textAlign: 'center' }}>Carregando...</div>;
 
+  if (confirmacao) {
+    return (
+      <Confirmacao
+        pedido={pedido}
+        endereco={confirmacao.endereco}
+        onAcompanhar={() => navigate(location.pathname, { replace: true, state: null })}
+      />
+    );
+  }
+
   const cancelado = pedido.status === 'CANCELADO';
   const lista = etapas(pedido);
   // Uma etapa pulada pelo restaurante (sem horário) conta como feita se alguma posterior já aconteceu.
@@ -40,7 +88,7 @@ export default function AcompanhamentoPedido() {
   return (
     <div className="pub-shell">
       <header className="pub-header">
-        <h1>Pedido #{pedido.numeroDia}</h1>
+        <h1>Pedido {numeroPedido(pedido.numeroDia)}</h1>
         <p>{pedido.restauranteNome} · {MODALIDADE_LABEL[pedido.modalidade]}</p>
       </header>
       <main className="pub-content">

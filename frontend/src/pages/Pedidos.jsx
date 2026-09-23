@@ -4,8 +4,9 @@ import { api } from '../api/http';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 import RecursoBloqueado from '../components/RecursoBloqueado';
+import Icone, { ICONE_MODALIDADE, ICONE_PAGAMENTO } from '../components/Icone';
 import {
-  moeda, hora, haQuantoTempo, telefone,
+  moeda, hora, telefone, numeroPedido, urgencia, minutosDesde,
   STATUS_LABEL, MODALIDADE_LABEL, PAGAMENTO_LABEL, MOTIVO_CANCELAMENTO_LABEL,
 } from '../api/formato';
 
@@ -21,7 +22,7 @@ const COLUNAS = [
 /** O próximo passo "natural" de cada status — o botão principal do cartão. */
 function proximaAcao(pedido) {
   switch (pedido.status) {
-    case 'RECEBIDO': return { status: 'CONFIRMADO', rotulo: 'Aceitar' };
+    case 'RECEBIDO': return { status: 'CONFIRMADO', rotulo: 'Aceitar pedido' };
     case 'CONFIRMADO': return { status: 'EM_PREPARO', rotulo: 'Iniciar preparo' };
     case 'EM_PREPARO': return { status: 'PRONTO', rotulo: 'Marcar pronto' };
     case 'PRONTO':
@@ -50,37 +51,64 @@ function tocarAlerta(contexto) {
   });
 }
 
+const ROTULO_URGENCIA = { ok: 'No prazo', atencao: 'Atenção', atrasado: 'Atrasado' };
+const MAX_ITENS_CARTAO = 8;
+
 function CartaoPedido({ pedido, agora, onAvancar, onAbrir, ocupado }) {
   const acao = proximaAcao(pedido);
-  const atrasado = pedido.status !== 'SAIU_PARA_ENTREGA' && new Date(pedido.prontoPrevistoPara).getTime() < agora;
-  const totalItens = pedido.itens.reduce((soma, i) => soma + i.quantidade, 0);
+  const nivel = urgencia(pedido, agora);
+  const referenciaTempo = pedido.status === 'SAIU_PARA_ENTREGA' && pedido.saiuParaEntregaEm ? pedido.saiuParaEntregaEm : pedido.criadoEm;
 
   return (
-    <div className={`pedido-card ${pedido.status === 'RECEBIDO' ? 'novo' : ''}`}>
-      <button className="pedido-card-corpo" onClick={() => onAbrir(pedido.id)}>
+    <article className={`pedido-card urgencia-${nivel}`}>
+      <button className="pedido-card-corpo" onClick={() => onAbrir(pedido.id)} aria-label={`Abrir pedido ${numeroPedido(pedido.numeroDia)}`}>
         <div className="pedido-card-topo">
-          <strong>#{pedido.numeroDia}</strong>
-          <span className={`tempo ${atrasado ? 'atrasado' : ''}`}>{haQuantoTempo(pedido.criadoEm, agora)}</span>
+          <strong>Pedido {numeroPedido(pedido.numeroDia)}</strong>
+          <span className={`chip-tempo ${nivel}`} title={ROTULO_URGENCIA[nivel]}>
+            <Icone nome="relogio" tamanho={13} /> {minutosDesde(referenciaTempo, agora)}
+          </span>
         </div>
-        <div className="pedido-card-cliente">{pedido.cliente.nome}</div>
-        <div className="pedido-card-info">
-          <span className="tag">{MODALIDADE_LABEL[pedido.modalidade]}</span>
-          {pedido.status === 'SAIU_PARA_ENTREGA' && <span className="tag">Saiu</span>}
-          <span>{totalItens} {totalItens === 1 ? 'item' : 'itens'} · {moeda(pedido.total)}</span>
+
+        <div className="pedido-card-linha destaque"><Icone nome="pessoa" /> {pedido.cliente.nome}</div>
+        <div className="pedido-card-linha">
+          <Icone nome={ICONE_MODALIDADE[pedido.modalidade]} /> {MODALIDADE_LABEL[pedido.modalidade]}
+          {pedido.status === 'SAIU_PARA_ENTREGA' && <span className="tag">na rua</span>}
         </div>
+        <div className="pedido-card-linha">
+          <Icone nome={ICONE_PAGAMENTO[pedido.formaPagamento]} />
+          <strong>{moeda(pedido.total)}</strong>
+          <span className="suave">· {PAGAMENTO_LABEL[pedido.formaPagamento]}</span>
+        </div>
+        {pedido.trocoPara && (
+          <div className="pedido-card-linha troco">Troco: {moeda(pedido.trocoPara - pedido.total)} · paga com {moeda(pedido.trocoPara)}</div>
+        )}
+
         <ul className="pedido-card-itens">
-          {pedido.itens.slice(0, 3).map((item, i) => (
-            <li key={i}>{item.quantidade}× {item.nomeProduto}</li>
+          {pedido.itens.slice(0, MAX_ITENS_CARTAO).map((item, i) => (
+            <li key={i}>
+              <span className="qtd">{item.quantidade}×</span> {item.nomeProduto}
+              {item.observacao && <div className="obs">{item.observacao}</div>}
+            </li>
           ))}
-          {pedido.itens.length > 3 && <li>+ {pedido.itens.length - 3} outros</li>}
+          {pedido.itens.length > MAX_ITENS_CARTAO && <li className="suave">+ {pedido.itens.length - MAX_ITENS_CARTAO} itens</li>}
         </ul>
+
+        {pedido.enderecoEntrega && (
+          <div className="pedido-card-linha endereco">
+            <Icone nome="local" />
+            <span>{pedido.enderecoEntrega}{pedido.bairroEntrega ? ` · ${pedido.bairroEntrega}` : ''}</span>
+          </div>
+        )}
+        {pedido.observacao && (
+          <div className="pedido-card-linha obs-geral"><Icone nome="nota" /> <span>{pedido.observacao}</span></div>
+        )}
       </button>
       {acao && (
         <button className="btn btn-latao pedido-card-acao" disabled={ocupado} onClick={() => onAvancar(pedido, acao.status)}>
           {acao.rotulo}
         </button>
       )}
-    </div>
+    </article>
   );
 }
 
@@ -98,7 +126,7 @@ function DetalhePedido({ id, onFechar, onAvancar, onCancelar }) {
   const emAndamento = !['CONCLUIDO', 'CANCELADO'].includes(pedido.status);
 
   return (
-    <Modal titulo={`Pedido #${pedido.numeroDia} · ${STATUS_LABEL[pedido.status]}`} onFechar={onFechar}>
+    <Modal titulo={`Pedido ${numeroPedido(pedido.numeroDia)} · ${STATUS_LABEL[pedido.status]}`} onFechar={onFechar}>
       <div className="detalhe-grid">
         <div>
           <div className="rotulo">Cliente</div>
@@ -163,7 +191,7 @@ function DetalhePedido({ id, onFechar, onAvancar, onCancelar }) {
 function CancelarPedido({ pedido, onFechar, onConfirmar, erro }) {
   const [motivo, setMotivo] = useState('');
   return (
-    <Modal titulo={`Cancelar pedido #${pedido.numeroDia}`} onFechar={onFechar}>
+    <Modal titulo={`Cancelar pedido ${numeroPedido(pedido.numeroDia)}`} onFechar={onFechar}>
       {erro && <div className="erro">{erro}</div>}
       <div className="campo">
         <label>Motivo</label>
@@ -209,7 +237,7 @@ function PedidosDoDia({ onAbrir }) {
           <tbody>
             {pedidos.map((p) => (
               <tr key={p.id} onClick={() => onAbrir(p.id)} style={{ cursor: 'pointer' }}>
-                <td>{p.numeroDia}</td>
+                <td>{numeroPedido(p.numeroDia)}</td>
                 <td>{hora(p.criadoEm)}</td>
                 <td>{p.cliente.nome}</td>
                 <td>{MODALIDADE_LABEL[p.modalidade]}</td>
@@ -233,6 +261,7 @@ export default function Pedidos() {
   const [erro, setErro] = useState('');
   const [agora, setAgora] = useState(Date.now());
   const [somAtivo, setSomAtivo] = useState(false);
+  const [copiado, setCopiado] = useState(false);
   const audioRef = useRef(null);
   const novosVistosRef = useRef(null);
 
@@ -250,7 +279,7 @@ export default function Pedidos() {
 
   // Relógio da tela: atualiza o "há X min" dos cartões.
   useEffect(() => {
-    const t = setInterval(() => setAgora(Date.now()), 30000);
+    const t = setInterval(() => setAgora(Date.now()), 15000);
     return () => clearInterval(t);
   }, []);
 
@@ -315,28 +344,47 @@ export default function Pedidos() {
     return <RecursoBloqueado planoNecessario={error.dados.planoNecessario} mensagem={error.dados.mensagem} />;
   }
 
-  const linkCardapio = restaurante ? `${window.location.origin}/r/${restaurante.slug || usuario?.restauranteSlug}` : '';
+  // Em produção é o domínio público do sistema (VITE_URL_PUBLICA); em desenvolvimento, o endereço local.
+  const baseLink = import.meta.env.VITE_URL_PUBLICA || window.location.origin;
+  const linkCardapio = restaurante ? `${baseLink}/r/${restaurante.slug || usuario?.restauranteSlug}` : '';
+
+  function copiarLink() {
+    navigator.clipboard?.writeText(linkCardapio).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    });
+  }
 
   return (
     <div>
-      <div className="page-header">
+      <div className="pedidos-cabecalho">
         <div>
           <h2>Pedidos</h2>
-          <p>A tela se atualiza sozinha a cada poucos segundos.</p>
+          {linkCardapio && (
+            <p className="link-cardapio">
+              Seu cardápio: <a href={linkCardapio} target="_blank" rel="noreferrer">{linkCardapio.replace(/^https?:\/\//, '')}</a>
+              <button className="btn-link" onClick={copiarLink}>{copiado ? 'Copiado ✓' : 'Copiar'}</button>
+            </p>
+          )}
         </div>
         <div className="toolbar-pedidos">
           {restaurante && (
             <button
-              className={`btn ${restaurante.aceitandoPedidos ? 'btn-aberto' : 'btn-secundario'}`}
+              className={`btn ${restaurante.aceitandoPedidos ? 'btn-aberto' : 'btn-fechado'}`}
               onClick={() => alternarLoja.mutate(!restaurante.aceitandoPedidos)}
               disabled={alternarLoja.isPending}
+              title={restaurante.aceitandoPedidos ? 'Clique para fechar a loja' : 'Clique para abrir a loja'}
             >
-              {restaurante.aceitandoPedidos ? '● Loja aberta' : '○ Loja fechada'}
+              <span className="bolinha" /> {restaurante.aceitandoPedidos ? 'Loja aberta' : 'Loja fechada'}
             </button>
           )}
-          {!somAtivo
-            ? <button className="btn btn-secundario" onClick={ativarSom}>🔔 Ativar som</button>
-            : <span className="som-ativo">🔔 Som ativo</span>}
+          <button
+            className="btn btn-secundario btn-icone"
+            onClick={somAtivo ? () => setSomAtivo(false) : ativarSom}
+            title={somAtivo ? 'Som de pedido novo ligado (clique para desligar)' : 'Ligar som de pedido novo'}
+          >
+            <Icone nome={somAtivo ? 'som' : 'semSom'} tamanho={18} /> {somAtivo ? 'Som ligado' : 'Ligar som'}
+          </button>
         </div>
       </div>
 
@@ -346,16 +394,16 @@ export default function Pedidos() {
         </div>
       )}
 
-      {linkCardapio && (
-        <p className="link-cardapio">
-          Link do cardápio: <a href={linkCardapio} target="_blank" rel="noreferrer">{linkCardapio}</a>
-          <button className="btn-link" onClick={() => navigator.clipboard?.writeText(linkCardapio)}>Copiar</button>
-        </p>
-      )}
-
       <div className="abas">
         <button className={aba === 'painel' ? 'ativa' : ''} onClick={() => setAba('painel')}>Em andamento ({pedidos.length})</button>
         <button className={aba === 'dia' ? 'ativa' : ''} onClick={() => setAba('dia')}>Todos de hoje</button>
+        {aba === 'painel' && (
+          <div className="legenda-urgencia" aria-label="Legenda de tempo">
+            <span><i className="ok" /> no prazo</span>
+            <span><i className="atencao" /> atenção</span>
+            <span><i className="atrasado" /> atrasado</span>
+          </div>
+        )}
       </div>
 
       {erro && <div className="erro">{erro}</div>}

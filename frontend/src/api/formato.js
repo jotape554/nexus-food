@@ -56,3 +56,40 @@ export const MOTIVO_CANCELAMENTO_LABEL = {
   NAO_ENTREGUE: 'Não foi possível entregar',
   OUTRO: 'Outro motivo',
 };
+
+export function numeroPedido(numero) {
+  return `#${String(numero).padStart(3, '0')}`;
+}
+
+/**
+ * Urgência do pedido no painel: 'ok' | 'atencao' | 'atrasado'.
+ *
+ * - Novo (ainda não aceito): conta o tempo esperando aceite — até 5 min ok, até 10 atenção.
+ *   São as mesmas referências do indicador "tempo de aceite" do Nexus Score.
+ * - Aceito / em preparo / pronto: compara com a previsão prometida ao cliente
+ *   (criação + tempo de preparo configurado). Até 75% do prazo ok, até 100% atenção, depois atrasado.
+ *   Assim uma pizza com 25 min não fica vermelha se o restaurante promete 40.
+ * - Saiu para entrega: tempo desde a saída — até 30 min ok, até 45 atenção.
+ */
+export function urgencia(pedido, agora = Date.now()) {
+  const min = (desde) => (agora - new Date(desde).getTime()) / 60000;
+
+  if (pedido.status === 'RECEBIDO') {
+    const esperando = min(pedido.criadoEm);
+    return esperando < 5 ? 'ok' : esperando < 10 ? 'atencao' : 'atrasado';
+  }
+  if (pedido.status === 'SAIU_PARA_ENTREGA' && pedido.saiuParaEntregaEm) {
+    const naRua = min(pedido.saiuParaEntregaEm);
+    return naRua < 30 ? 'ok' : naRua < 45 ? 'atencao' : 'atrasado';
+  }
+  const inicio = new Date(pedido.criadoEm).getTime();
+  const prazo = new Date(pedido.prontoPrevistoPara).getTime();
+  const fracao = (agora - inicio) / Math.max(1, prazo - inicio);
+  return fracao < 0.75 ? 'ok' : fracao <= 1 ? 'atencao' : 'atrasado';
+}
+
+export function minutosDesde(instante, agora = Date.now()) {
+  const minutos = Math.max(0, Math.floor((agora - new Date(instante).getTime()) / 60000));
+  if (minutos < 60) return `${minutos} min`;
+  return `${Math.floor(minutos / 60)} h ${String(minutos % 60).padStart(2, '0')}`;
+}

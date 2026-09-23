@@ -341,7 +341,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--latao);
-  box-shadow: 0 0 0 3px rgba(176, 141, 79, 0.18);
+  box-shadow: 0 0 0 3px rgba(217, 98, 43, 0.18);
 }
 
 label {
@@ -620,10 +620,27 @@ label {
   flex-wrap: wrap;
 }
 
+/* O painel de pedidos usa a largura toda: é a tela que fica aberta o dia inteiro no balcão. */
+.main.main-largo { max-width: none; padding: 28px 32px; }
+
+.pedidos-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.pedidos-cabecalho h2 { margin-bottom: 2px; }
+
 .toolbar-pedidos { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.btn-aberto { background: #E4F3E9; border-color: #9BCBAB; color: #1F6B3C; font-weight: 600; }
+.btn-icone { gap: 8px; }
+.btn-aberto, .btn-fechado { gap: 8px; }
+.btn-aberto { background: #E4F3E9; border-color: #9BCBAB; color: #1F6B3C; }
 .btn-aberto:hover { background: #D3EBDB; }
-.som-ativo { font-size: 0.85rem; color: var(--texto-suave); }
+.btn-fechado { background: #FBEAE7; border-color: #E7B5AD; color: var(--vermelho-couro); }
+.btn-fechado:hover { background: #F6DCD7; }
+.bolinha { width: 9px; height: 9px; border-radius: 50%; background: currentColor; display: inline-block; }
 
 .btn-link {
   background: none;
@@ -636,10 +653,10 @@ label {
 .btn-link:hover { text-decoration: underline; }
 .btn-link.perigo { color: var(--vermelho-couro); }
 
-.link-cardapio { font-size: 0.88rem; color: var(--texto-suave); margin: -8px 0 16px; word-break: break-all; }
+.link-cardapio { font-size: 0.88rem; color: var(--texto-suave); margin: 0; word-break: break-all; }
 .link-cardapio a { color: var(--texto); }
 
-.abas { display: flex; gap: 4px; border-bottom: 1px solid var(--borda); margin-bottom: 18px; }
+.abas { display: flex; gap: 4px; border-bottom: 1px solid var(--borda); margin-bottom: 16px; align-items: flex-end; flex-wrap: wrap; }
 .abas button {
   background: none;
   border: none;
@@ -650,58 +667,135 @@ label {
 }
 .abas button.ativa { color: var(--texto); border-bottom-color: var(--latao); }
 
+.legenda-urgencia { margin-left: auto; display: flex; gap: 14px; font-size: 0.8rem; color: var(--texto-suave); padding-bottom: 10px; }
+.legenda-urgencia span { display: inline-flex; align-items: center; gap: 6px; }
+.legenda-urgencia i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Cores de urgência: verde / âmbar / vermelho, sempre acompanhadas do tempo escrito. */
+:root { --urg-ok: #2E8B57; --urg-atencao: #D99A00; --urg-atrasado: #C0392B; }
+.legenda-urgencia i.ok { background: var(--urg-ok); }
+.legenda-urgencia i.atencao { background: var(--urg-atencao); }
+.legenda-urgencia i.atrasado { background: var(--urg-atrasado); }
+
 .quadro-pedidos {
   display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
-  gap: 14px;
-  align-items: start;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+  min-height: calc(100vh - 190px);
 }
 
 .coluna-pedidos {
   background: var(--papel-forte);
   border-radius: var(--radius);
   padding: 12px;
-  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .coluna-pedidos h3 {
   font-family: var(--fonte-corpo);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   display: flex;
   justify-content: space-between;
-  margin: 2px 4px 12px;
+  align-items: center;
+  margin: 2px 4px 0;
+  color: var(--texto-suave);
 }
-.coluna-pedidos h3 span { color: var(--texto-suave); font-weight: 600; }
-.coluna-vazia { text-align: center; color: var(--texto-suave); padding: 16px 0; }
+.coluna-pedidos h3 span {
+  background: var(--branco);
+  color: var(--texto);
+  border-radius: var(--radius-full);
+  min-width: 26px;
+  padding: 2px 8px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+.coluna-vazia {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  border: 1px dashed var(--borda-forte);
+  border-radius: var(--radius);
+  min-height: 120px;
+}
 
 .pedido-card {
   background: var(--branco);
   border: 1px solid var(--borda);
+  border-left: 5px solid var(--urg-ok);
   border-radius: var(--radius);
   box-shadow: var(--sombra-sm);
-  margin-bottom: 10px;
   overflow: hidden;
 }
-.pedido-card.novo { border-color: var(--latao); box-shadow: 0 0 0 2px var(--latao-suave); }
+.pedido-card.urgencia-atencao { border-left-color: var(--urg-atencao); }
+.pedido-card.urgencia-atrasado { border-left-color: var(--urg-atrasado); background: #FFFBFA; }
+
 .pedido-card-corpo {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   width: 100%;
   text-align: left;
   background: none;
   border: none;
-  padding: 12px 14px 8px;
-  font-size: 0.88rem;
+  padding: 14px 16px 10px;
+  font-size: 0.9rem;
   color: var(--texto);
 }
-.pedido-card-topo { display: flex; justify-content: space-between; align-items: baseline; }
-.pedido-card-topo strong { font-size: 1.15rem; }
-.pedido-card-topo .tempo { font-size: 0.78rem; color: var(--texto-suave); }
-.pedido-card-topo .tempo.atrasado { color: var(--vermelho-couro); font-weight: 700; }
-.pedido-card-cliente { font-weight: 600; margin: 2px 0 6px; }
-.pedido-card-info { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; color: var(--texto-suave); font-size: 0.8rem; }
-.pedido-card-info .tag { background: var(--papel-forte); color: var(--texto); border-radius: var(--radius-full); padding: 2px 8px; font-weight: 600; }
-.pedido-card-itens { margin: 8px 0 0; padding-left: 16px; color: var(--texto-suave); font-size: 0.82rem; }
-.pedido-card-acao { width: calc(100% - 20px); margin: 4px 10px 10px; justify-content: center; }
+.pedido-card-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+.pedido-card-topo strong { font-size: 1.05rem; }
+
+.chip-tempo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-variant-numeric: tabular-nums;
+}
+.chip-tempo.ok { background: #E4F3E9; color: #1F6B3C; }
+.chip-tempo.atencao { background: #FDF1D2; color: #8A6100; }
+.chip-tempo.atrasado { background: #FBE3DF; color: var(--urg-atrasado); }
+
+.pedido-card-linha { display: flex; align-items: flex-start; gap: 8px; line-height: 1.35; }
+.pedido-card-linha .icone { flex-shrink: 0; margin-top: 2px; color: var(--texto-suave); }
+.pedido-card-linha.destaque { font-weight: 600; font-size: 0.95rem; }
+.pedido-card-linha .suave, .pedido-card .suave { color: var(--texto-suave); }
+.pedido-card-linha .tag { background: var(--papel-forte); border-radius: var(--radius-full); padding: 1px 8px; font-size: 0.75rem; font-weight: 700; }
+.pedido-card-linha.endereco, .pedido-card-linha.obs-geral { font-size: 0.85rem; }
+.pedido-card-linha.troco { font-size: 0.85rem; font-weight: 600; color: #8A6100; padding-left: 24px; }
+.pedido-card-linha.obs-geral { background: var(--latao-suave); border-radius: var(--radius-sm); padding: 6px 8px; }
+
+.pedido-card-itens {
+  list-style: none;
+  margin: 4px 0;
+  padding: 8px 0;
+  border-top: 1px solid var(--borda);
+  border-bottom: 1px solid var(--borda);
+  font-size: 0.9rem;
+}
+.pedido-card-itens li { padding: 2px 0; }
+.pedido-card-itens .qtd { font-weight: 700; display: inline-block; min-width: 26px; }
+.pedido-card-itens .obs { margin-left: 26px; }
+
+.pedido-card-acao {
+  width: calc(100% - 24px);
+  margin: 2px 12px 12px;
+  justify-content: center;
+  padding: 11px 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+}
 
 .resumo-dia { display: flex; gap: 28px; padding: 18px 20px; border-bottom: 1px solid var(--borda); flex-wrap: wrap; font-size: 0.88rem; color: var(--texto-suave); }
 .resumo-dia span { display: block; font-size: 1.3rem; font-weight: 700; color: var(--texto); }
@@ -742,7 +836,7 @@ label {
 /* ---------- telas menores (tablet no balcão, celular) ---------- */
 
 @media (max-width: 1100px) {
-  .quadro-pedidos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quadro-pedidos { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 0; }
 }
 
 @media (max-width: 800px) {
@@ -754,6 +848,8 @@ label {
   .sidebar-footer { display: none; }
   .main { padding: 20px 16px; max-width: 100%; }
   .quadro-pedidos { grid-template-columns: 1fr; }
+  .main.main-largo { padding: 16px; }
+  .legenda-urgencia { margin-left: 0; width: 100%; }
   .detalhe-grid { grid-template-columns: 1fr; }
   .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
   .main table { display: block; overflow-x: auto; }

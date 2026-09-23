@@ -55,7 +55,7 @@ function PainelLayout() {
   return (
     <div className="app-shell">
       <Sidebar />
-      <main className="main">
+      <main className={`main ${location.pathname.startsWith('/painel/pedidos') ? 'main-largo' : ''}`}>
         <TrialBanner status={status} />
         <Suspense fallback={<CarregandoPagina />}>
           <Outlet />

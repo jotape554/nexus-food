@@ -209,18 +209,15 @@
 
 .item-sacola { padding: 12px 0; border-bottom: 1px solid var(--borda); }
 .item-sacola-linha { display: flex; align-items: center; gap: 12px; }
-.item-sacola-linha .nome { flex: 1; font-weight: 600; }
 .controle-qtd { display: flex; align-items: center; border: 1px solid var(--borda-forte); border-radius: var(--radius-full); }
 .controle-qtd button { border: none; background: none; width: 32px; height: 32px; font-size: 1.1rem; }
 .controle-qtd span { min-width: 20px; text-align: center; font-weight: 700; }
-.obs-item { margin-top: 8px; width: 100%; font-size: 0.85rem; }
 
 .opcoes-linha { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); margin-bottom: 16px; }
 .opcoes-linha .opcao { justify-content: center; }
 
 .resumo-sacola { margin: 20px 0 8px; padding-top: 12px; border-top: 1px solid var(--borda); }
 .resumo-sacola div { display: flex; justify-content: space-between; padding: 3px 0; }
-.resumo-sacola .total { font-weight: 700; font-size: 1.1rem; }
 .aviso-minimo { color: var(--latao-forte); font-weight: 600; font-size: 0.9rem; }
 .btn-enviar { width: 100%; justify-content: center; padding: 14px; font-size: 1rem; margin-top: 12px; }
 
@@ -239,7 +236,100 @@
 .tabela-itens tr.total td { font-weight: 700; border-bottom: none; }
 .obs { font-size: 0.8rem; color: var(--latao-forte); }
 
+/* ---------- checkout em etapas ---------- */
+
+/* 16px nos campos: abaixo disso o iPhone dá zoom sozinho ao tocar no campo. */
+.pub-shell input, .pub-shell select, .pub-shell textarea { font-size: 16px; padding: 12px 14px; }
+.pub-shell .campo label { font-size: 0.95rem; font-weight: 600; color: var(--texto); margin-bottom: 6px; }
+.pub-shell .campo small { display: block; font-size: 0.85rem; color: var(--texto-suave); margin-top: 6px; line-height: 1.35; }
+.pub-shell .opcional { font-weight: 400; color: var(--texto-suave); }
+
+.checkout { padding-bottom: 110px; }
+.checkout-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+.checkout-topo .btn-link { padding-left: 0; }
+.checkout-passos { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; font-size: 0.8rem; font-weight: 600; color: var(--texto-suave); }
+.checkout-passos li { padding: 4px 10px; border-radius: var(--radius-full); background: var(--papel-forte); }
+.checkout-passos li.ativo { background: var(--tinta); color: var(--papel); }
+.checkout-passos li.feito { background: #E4F3E9; color: #1F6B3C; }
+
+.checkout-titulo { font-size: 1.25rem; margin: 8px 0 12px; }
+.checkout section > .checkout-titulo ~ .checkout-titulo { margin-top: 28px; }
+.ajuda { color: var(--texto-suave); font-size: 0.95rem; margin: -4px 0 16px; line-height: 1.45; }
+.ajuda.pequena { font-size: 0.85rem; margin-top: 14px; text-align: center; }
+.bloco-campos { margin-top: 16px; }
+
+.item-sacola { padding: 14px 0; border-bottom: 1px solid var(--borda); display: grid; gap: 10px; }
+.item-sacola-linha { display: flex; align-items: center; gap: 12px; }
+.item-sacola-linha .nome { flex: 1; font-weight: 600; font-size: 1rem; }
+.item-sacola-linha .valor { font-weight: 600; font-variant-numeric: tabular-nums; }
+.item-sacola .obs-item { flex: 1; min-width: 0; font-size: 16px; padding: 8px 12px; }
+
+.cartoes-escolha { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.cartoes-escolha.pagamento { grid-template-columns: repeat(2, 1fr); }
+.cartao-escolha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px;
+  border: 1.5px solid var(--borda-forte);
+  border-radius: var(--radius);
+  background: var(--branco);
+  text-align: left;
+  font-family: var(--fonte-corpo);
+  color: var(--texto);
+  transition: border-color var(--transicao), background var(--transicao);
+}
+.cartao-escolha .icone { color: var(--texto-suave); }
+.cartao-escolha strong { font-size: 1rem; }
+.cartao-escolha span { font-size: 0.85rem; color: var(--texto-suave); line-height: 1.3; }
+.cartao-escolha.selecionado { border-color: var(--latao); background: var(--latao-suave); box-shadow: 0 0 0 1px var(--latao); }
+.cartao-escolha.selecionado .icone { color: var(--latao-forte); }
+
+.opcoes-troco { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.opcoes-troco label { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 500; }
+.opcoes-troco input { width: 20px; height: 20px; }
+
+.resumo-sacola { margin: 24px 0 4px; padding: 16px; background: var(--papel); border-radius: var(--radius); border-top: none; }
+.resumo-sacola div { display: flex; justify-content: space-between; padding: 4px 0; color: var(--texto-suave); }
+.resumo-sacola .total { color: var(--texto); align-items: baseline; margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--borda); }
+.resumo-sacola .total span { font-weight: 600; }
+.resumo-sacola .total strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+
+.rodape-checkout {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(246, 244, 239, 0.96);
+  border-top: 1px solid var(--borda);
+  z-index: 5;
+}
+.rodape-checkout .btn-enviar { max-width: 600px; margin: 0 auto; display: flex; }
+.rodape-checkout .erro { max-width: 600px; margin: 0 auto 10px; }
+
+/* ---------- confirmação ---------- */
+
+.confirmacao { margin-top: 32px; }
+.confirmacao .pub-card { text-align: center; }
+.confirmacao h1 { font-size: 1.8rem; margin-bottom: 4px; }
+.confirmacao-icone {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: #E4F3E9;
+  color: #1F6B3C;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.confirmacao-numero { font-size: 1.1rem; font-weight: 700; margin: 0 0 12px; }
+.confirmacao-dados { text-align: left; margin: 20px 0; border: 1px solid var(--borda); border-radius: var(--radius); }
+.confirmacao-dados div { padding: 12px 16px; border-bottom: 1px solid var(--borda); }
+.confirmacao-dados div:last-child { border-bottom: none; }
+.confirmacao-dados dt { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-suave); }
+.confirmacao-dados dd { margin: 4px 0 0; font-size: 1rem; }
+.confirmacao-dados .total dd { font-size: 1.5rem; font-weight: 700; }
+
 @media (max-width: 600px) {
   .pub-content { padding: 0 12px; }
   .pub-card { padding: 20px 16px; }
+  .checkout-topo { flex-direction: column; align-items: flex-start; }
 }
