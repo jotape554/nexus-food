@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import AssinaturaNexus from '../../components/AssinaturaNexus';
+import AuthLayout from '../../components/AuthLayout';
 
 export default function Login() {
   const { login, aviso } = useAuth();
@@ -26,7 +26,7 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-shell">
+    <AuthLayout>
       <div className="auth-card">
         <h1>Entrar</h1>
         <p className="sub">Acesse o painel do seu restaurante.</p>
@@ -55,7 +55,6 @@ export default function Login() {
           Ainda não tem conta? <Link to="/registro">Criar restaurante</Link>
         </div>
       </div>
-      <AssinaturaNexus tom="escuro" />
-    </div>
+    </AuthLayout>
   );
 }

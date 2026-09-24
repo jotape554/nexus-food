@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/http';
-import AssinaturaNexus from '../../components/AssinaturaNexus';
+import AuthLayout from '../../components/AuthLayout';
 
 export default function RedefinirSenha() {
   const [searchParams] = useSearchParams();
@@ -51,7 +51,7 @@ export default function RedefinirSenha() {
 
   if (!token || linkInvalido) {
     return (
-      <div className="auth-shell">
+      <AuthLayout>
         <div className="auth-card">
           <h1>Link inválido</h1>
           <p className="sub">
@@ -63,12 +63,12 @@ export default function RedefinirSenha() {
             <Link to="/esqueci-senha">Pedir um novo link</Link>
           </div>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="auth-shell">
+    <AuthLayout>
       <div className="auth-card">
         <h1>{convite?.convite ? 'Criar sua senha' : 'Criar nova senha'}</h1>
         <p className="sub">
@@ -103,7 +103,6 @@ export default function RedefinirSenha() {
           <Link to="/login">Voltar para o login</Link>
         </div>
       </div>
-      <AssinaturaNexus tom="escuro" />
-    </div>
+    </AuthLayout>
   );
 }

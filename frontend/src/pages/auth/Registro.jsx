@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import AssinaturaNexus from '../../components/AssinaturaNexus';
+import AuthLayout from '../../components/AuthLayout';
 
 export default function Registro() {
   const { registrar } = useAuth();
@@ -37,7 +37,7 @@ export default function Registro() {
   }
 
   return (
-    <div className="auth-shell">
+    <AuthLayout>
       <div className="auth-card">
         <h1>Criar restaurante</h1>
         <p className="sub">Sua conta e seu painel ficam prontos em um passo.</p>
@@ -81,7 +81,6 @@ export default function Registro() {
           Já tem conta? <Link to="/login">Entrar</Link>
         </div>
       </div>
-      <AssinaturaNexus tom="escuro" />
-    </div>
+    </AuthLayout>
   );
 }

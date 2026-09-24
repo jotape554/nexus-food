@@ -383,14 +383,79 @@ label {
 
 .auth-shell {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  background: var(--papel);
+}
+
+/* ---------- apresentação (lado escuro) ---------- */
+
+.auth-apresentacao {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 32px;
+  padding: 44px 56px 36px;
+  color: var(--papel);
   background:
-    radial-gradient(circle at 15% 15%, rgba(176,141,79,0.16), transparent 45%),
-    radial-gradient(circle at 85% 85%, rgba(176,141,79,0.10), transparent 45%),
+    radial-gradient(circle at 15% 10%, rgba(176,141,79,0.16), transparent 45%),
+    radial-gradient(circle at 90% 95%, rgba(176,141,79,0.10), transparent 45%),
     var(--tinta);
-  padding: 24px;
+}
+.auth-marca { font-family: var(--fonte-titulo); font-size: 1.5rem; }
+.auth-marca span { color: var(--latao); }
+.auth-chamada h2 { font-size: 2rem; line-height: 1.2; color: var(--papel); max-width: 520px; margin-bottom: 12px; }
+.auth-chamada p { color: rgba(239, 235, 226, 0.7); max-width: 480px; margin: 0; line-height: 1.55; }
+
+.auth-recursos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 22px 28px; max-width: 620px; }
+.auth-recursos li { display: flex; gap: 12px; align-items: flex-start; }
+.auth-recursos strong { display: block; font-size: 0.95rem; margin-bottom: 3px; }
+.auth-recursos p { margin: 0; font-size: 0.86rem; line-height: 1.45; color: rgba(239, 235, 226, 0.62); }
+.auth-recurso-icone {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(217, 98, 43, 0.16);
+  color: var(--latao);
+}
+
+.auth-amostra { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; max-width: 620px; }
+.auth-amostra > div { background: var(--branco); color: var(--texto); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--sombra-lg); }
+.amostra-pedido { flex: 1 1 220px; border-left: 4px solid #2E9A5B; display: grid; gap: 8px; align-content: center; }
+.amostra-nota { flex: 1 1 220px; display: grid; gap: 6px; }
+.amostra-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.9rem; }
+.amostra-linha.suave { color: var(--texto-suave); }
+.amostra-numero { font-size: 2rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+.amostra-nota .faixa-selo { font-size: 0.8rem; padding: 3px 10px; }
+.amostra-escala { display: flex; gap: 2px; height: 6px; }
+.amostra-escala span { border-radius: 2px; background: var(--faixa-muito_bom); opacity: 0.25; }
+.amostra-escala span.atual { opacity: 1; }
+.auth-amostra figcaption { flex-basis: 100%; font-size: 0.75rem; color: rgba(239, 235, 226, 0.45); }
+
+.auth-rodape { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.85rem; color: rgba(239, 235, 226, 0.7); }
+
+/* ---------- formulário (lado claro) ---------- */
+
+.auth-formulario { display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+.auth-formulario .auth-card { box-shadow: var(--sombra); border: 1px solid var(--borda); }
+
+@media (max-width: 1100px) {
+  .auth-apresentacao { padding: 36px 36px 28px; }
+  .auth-recursos { grid-template-columns: 1fr; }
+}
+
+/* No celular: só a marca e a chamada, curtas, em cima do formulário. */
+@media (max-width: 860px) {
+  .auth-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .auth-apresentacao { gap: 10px; padding: 22px 20px 26px; }
+  .auth-chamada h2 { font-size: 1.25rem; margin-bottom: 6px; }
+  .auth-chamada p { font-size: 0.88rem; }
+  .auth-recursos, .auth-amostra { display: none; }
+  .auth-rodape { margin-top: 8px; font-size: 0.8rem; }
+  .auth-formulario { align-items: flex-start; padding: 20px 16px 32px; }
+  .auth-formulario .auth-card { padding: 28px 22px; }
 }
 
 .auth-card {
@@ -1000,7 +1065,6 @@ label {
 .assinatura-nexus:hover .assinatura-marca { text-decoration: underline; text-underline-offset: 3px; }
 .ponto-nexus { width: 8px; height: 8px; border-radius: 50%; background: var(--nexus-degrade); flex-shrink: 0; }
 
-.auth-shell { flex-direction: column; gap: 20px; }
 .sidebar-assinatura { justify-content: flex-start; padding: 12px 10px 0; }
 .rodape-publico { display: flex; justify-content: center; padding: 16px 0 8px; }
 

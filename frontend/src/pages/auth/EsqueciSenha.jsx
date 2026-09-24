@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api/http';
-import AssinaturaNexus from '../../components/AssinaturaNexus';
+import AuthLayout from '../../components/AuthLayout';
 
 export default function EsqueciSenha() {
   const [email, setEmail] = useState('');
@@ -24,7 +24,7 @@ export default function EsqueciSenha() {
   }
 
   return (
-    <div className="auth-shell">
+    <AuthLayout>
       <div className="auth-card">
         <h1>Esqueci minha senha</h1>
         <p className="sub">Enviamos um link pra você criar uma senha nova.</p>
@@ -51,7 +51,6 @@ export default function EsqueciSenha() {
           <Link to="/login">Voltar para o login</Link>
         </div>
       </div>
-      <AssinaturaNexus tom="escuro" />
-    </div>
+    </AuthLayout>
   );
 }
