@@ -4,6 +4,7 @@ import AssinaturaNexus from '../../components/AssinaturaNexus';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/http';
 import { moeda, hora, numeroPedido, MODALIDADE_LABEL, PAGAMENTO_LABEL, MOTIVO_CANCELAMENTO_LABEL } from '../../api/formato';
+import OpcoesDoItem from '../../components/OpcoesDoItem';
 import '../../styles/public.css';
 
 function etapas(pedido) {
@@ -120,7 +121,7 @@ export default function AcompanhamentoPedido() {
               {pedido.itens.map((item, i) => (
                 <tr key={i}>
                   <td>{item.quantidade}×</td>
-                  <td>{item.nomeProduto}{item.observacao && <div className="obs">{item.observacao}</div>}</td>
+                  <td>{item.nomeProduto}<OpcoesDoItem opcoes={item.opcoes} />{item.observacao && <div className="obs">{item.observacao}</div>}</td>
                   <td style={{ textAlign: 'right' }}>{moeda(item.subtotal)}</td>
                 </tr>
               ))}

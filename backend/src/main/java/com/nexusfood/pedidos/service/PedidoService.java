@@ -1,5 +1,7 @@
 package com.nexusfood.pedidos.service;
 
+import com.nexusfood.catalogo.model.GrupoOpcoes;
+import com.nexusfood.catalogo.model.Opcao;
 import com.nexusfood.catalogo.model.Produto;
 import com.nexusfood.catalogo.repository.ProdutoRepository;
 import com.nexusfood.clientes.model.Cliente;
@@ -12,6 +14,7 @@ import com.nexusfood.pedidos.enums.FormaPagamento;
 import com.nexusfood.pedidos.enums.ModalidadePedido;
 import com.nexusfood.pedidos.enums.StatusPedido;
 import com.nexusfood.pedidos.model.ItemPedido;
+import com.nexusfood.pedidos.model.ItemPedidoOpcao;
 import com.nexusfood.pedidos.model.Pedido;
 import com.nexusfood.pedidos.repository.PedidoRepository;
 import com.nexusfood.plataforma.enums.TipoTaxaEntrega;
@@ -33,8 +36,11 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -188,16 +194,77 @@ public class PedidoService {
             if (!produto.isDisponivel()) {
                 throw new RegraDeNegocioException("\"" + produto.getNome() + "\" esgotou. Remova-o do pedido para continuar.");
             }
-            BigDecimal subtotal = produto.getPreco().multiply(BigDecimal.valueOf(itemReq.getQuantidade()));
-            return ItemPedido.builder()
+            List<Opcao> escolhidas = opcoesEscolhidas(produto, itemReq.getOpcoes());
+            BigDecimal precoUnitario = precoComOpcoes(produto, escolhidas);
+            if (precoUnitario.signum() <= 0) {
+                throw new RegraDeNegocioException("\"" + produto.getNome() + "\" está sem preço no cardápio. Escolha outro produto.");
+            }
+            ItemPedido item = ItemPedido.builder()
                     .produto(produto)
                     .nomeProduto(produto.getNome())
-                    .precoUnitario(produto.getPreco())
+                    .precoUnitario(precoUnitario)
                     .quantidade(itemReq.getQuantidade())
-                    .subtotal(subtotal)
+                    .subtotal(precoUnitario.multiply(BigDecimal.valueOf(itemReq.getQuantidade())))
                     .observacao(textoOuNulo(itemReq.getObservacao()))
                     .build();
+            escolhidas.forEach(o -> item.adicionarOpcao(ItemPedidoOpcao.builder()
+                    .opcaoId(o.getId())
+                    .nomeGrupo(o.getGrupo().getNome())
+                    .nomeOpcao(o.getNome())
+                    .preco(o.getPreco())
+                    .build()));
+            return item;
         }).toList();
+    }
+
+    /**
+     * Confere as opções do item contra o cadastro: cada id precisa ser deste produto, estar
+     * disponível e cada grupo precisa respeitar o mínimo e o máximo de escolhas.
+     */
+    private List<Opcao> opcoesEscolhidas(Produto produto, List<Long> ids) {
+        List<Long> pedidas = ids == null ? List.of() : ids;
+        if (new HashSet<>(pedidas).size() != pedidas.size()) {
+            throw new RegraDeNegocioException("A mesma opção veio repetida em \"" + produto.getNome() + "\". Atualize a página.");
+        }
+        Map<Long, Opcao> doProduto = produto.getGrupos().stream().flatMap(g -> g.getOpcoes().stream())
+                .collect(Collectors.toMap(Opcao::getId, Function.identity()));
+
+        List<Opcao> escolhidas = new ArrayList<>();
+        for (Long id : pedidas) {
+            Opcao opcao = doProduto.get(id);
+            if (opcao == null) {
+                throw new RegraDeNegocioException("As opções de \"" + produto.getNome() + "\" mudaram. Atualize a página e escolha de novo.");
+            }
+            if (!opcao.isDisponivel()) {
+                throw new RegraDeNegocioException("\"" + opcao.getNome() + "\" esgotou em \"" + produto.getNome() + "\". Escolha outra opção.");
+            }
+            escolhidas.add(opcao);
+        }
+
+        for (GrupoOpcoes grupo : produto.getGrupos()) {
+            long n = escolhidas.stream().filter(o -> o.getGrupo().getId().equals(grupo.getId())).count();
+            if (n < grupo.getMinimo()) {
+                throw new RegraDeNegocioException(grupo.getMinimo() == 1 && grupo.getMaximo() == 1
+                        ? "Escolha " + grupo.getNome().toLowerCase(Locale.ROOT) + " em \"" + produto.getNome() + "\"."
+                        : "Escolha pelo menos " + grupo.getMinimo() + " em " + grupo.getNome() + " (\"" + produto.getNome() + "\").");
+            }
+            if (n > grupo.getMaximo()) {
+                throw new RegraDeNegocioException("Escolha no máximo " + grupo.getMaximo() + " em " + grupo.getNome() + " (\"" + produto.getNome() + "\").");
+            }
+        }
+        return escolhidas;
+    }
+
+    /** Preço do produto + o valor de cada grupo pela sua regra de cobrança (soma, maior ou média). */
+    static BigDecimal precoComOpcoes(Produto produto, List<Opcao> escolhidas) {
+        BigDecimal total = produto.getPreco();
+        for (GrupoOpcoes grupo : produto.getGrupos()) {
+            List<BigDecimal> precos = escolhidas.stream()
+                    .filter(o -> o.getGrupo().getId().equals(grupo.getId()))
+                    .map(Opcao::getPreco).toList();
+            total = total.add(grupo.getCobranca().valor(precos));
+        }
+        return total;
     }
 
     private void validarModalidade(Restaurante r, ModalidadePedido modalidade) {

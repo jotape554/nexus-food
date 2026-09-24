@@ -5,6 +5,9 @@ import { api } from '../../api/http';
 import { moeda, MODALIDADE_LABEL, PAGAMENTO_LABEL } from '../../api/formato';
 import Icone, { ICONE_MODALIDADE, ICONE_PAGAMENTO } from '../../components/Icone';
 import AssinaturaNexus from '../../components/AssinaturaNexus';
+import OpcoesDoItem from '../../components/OpcoesDoItem';
+import { opcoesDaSacola, precoComOpcoes, problemaDaEscolha, temPrecoVariavel } from '../../api/opcoes';
+import EscolhaOpcoes from './EscolhaOpcoes';
 import '../../styles/public.css';
 
 const ETAPAS_CHECKOUT = [
@@ -45,13 +48,19 @@ function novaChave() {
   return window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+const mesmasOpcoes = (a = [], b = []) => a.length === b.length && [...a].sort().join() === [...b].sort().join();
+
 function Produto({ produto, quantidade, onAdicionar }) {
+  const temOpcoes = produto.grupos?.length > 0;
   return (
     <div className={`produto-publico ${produto.disponivel ? '' : 'esgotado'}`}>
       <div className="produto-publico-texto">
         <strong>{produto.nome}</strong>
         {produto.descricao && <p>{produto.descricao}</p>}
-        <span className="preco">{moeda(produto.preco)}</span>
+        <span className="preco">
+          {temOpcoes && temPrecoVariavel(produto) && <small>a partir de </small>}
+          {moeda(produto.precoMinimo ?? produto.preco)}
+        </span>
       </div>
       {produto.imagemUrl && <img src={produto.imagemUrl} alt="" loading="lazy" />}
       {produto.disponivel ? (
@@ -76,6 +85,7 @@ export default function CardapioPublico() {
   const [carrinho, setCarrinho] = useState(() => lerLocal(chaveCarrinho, []));
   const [etapa, setEtapa] = useState('cardapio'); // cardapio | sacola | entrega | pagamento
   const [abertaObs, setAbertaObs] = useState(null);
+  const [escolhendo, setEscolhendo] = useState(null); // produto com opções aberto na folha
   const [dados, setDados] = useState(() => ({
     nomeCliente: '', telefoneCliente: '', ...lerLocal('nexusfood_cliente', {}),
     modalidade: '', formaPagamento: 'PIX', precisaTroco: false, trocoPara: '', enderecoEntrega: '', bairroId: '', observacao: '',
@@ -109,11 +119,16 @@ export default function CardapioPublico() {
     return mapa;
   }, [categorias]);
 
+  // Item vale se o produto segue disponível e as opções escolhidas ainda batem com o cardápio.
+  const itemValido = (item) => {
+    const produto = produtosPorId[item.produtoId];
+    return produto && produto.disponivel && !problemaDaEscolha(produto, item.opcoes || []);
+  };
   const itens = carrinho
-    .map((item) => ({ ...item, produto: produtosPorId[item.produtoId] }))
-    .filter((item) => item.produto && item.produto.disponivel);
+    .filter(itemValido)
+    .map((item) => ({ ...item, produto: produtosPorId[item.produtoId], unitario: precoComOpcoes(produtosPorId[item.produtoId], item.opcoes || []) }));
 
-  const subtotal = itens.reduce((soma, i) => soma + Number(i.produto.preco) * i.quantidade, 0);
+  const subtotal = itens.reduce((soma, i) => soma + i.unitario * i.quantidade, 0);
   const quantidadeTotal = itens.reduce((soma, i) => soma + i.quantidade, 0);
 
   let taxaEntrega = 0;
@@ -124,11 +139,21 @@ export default function CardapioPublico() {
   const total = subtotal + taxaEntrega;
   const faltaParaMinimo = restaurante ? Number(restaurante.pedidoMinimo) - subtotal : 0;
 
+  /** Produto sem opções entra direto; com opções, abre a folha de escolha. */
   function adicionar(produto) {
+    if (produto.grupos?.length > 0) {
+      setEscolhendo(produto);
+      return;
+    }
+    colocarNaSacola({ produtoId: produto.id, opcoes: [], quantidade: 1, observacao: '' });
+  }
+
+  /** Mesmo produto com as mesmas opções e sem observação soma na mesma linha. */
+  function colocarNaSacola(novo) {
     setCarrinho((c) => {
-      const existente = c.find((i) => i.produtoId === produto.id && !i.observacao);
-      if (existente) return c.map((i) => (i === existente ? { ...i, quantidade: Math.min(99, i.quantidade + 1) } : i));
-      return [...c, { produtoId: produto.id, quantidade: 1, observacao: '' }];
+      const existente = !novo.observacao && c.find((i) => i.produtoId === novo.produtoId && !i.observacao && mesmasOpcoes(i.opcoes, novo.opcoes));
+      if (existente) return c.map((i) => (i === existente ? { ...i, quantidade: Math.min(99, i.quantidade + novo.quantidade) } : i));
+      return [...c, novo];
     });
   }
 
@@ -204,7 +229,7 @@ export default function CardapioPublico() {
         enderecoEntrega: dados.modalidade === 'ENTREGA' ? dados.enderecoEntrega : null,
         bairroId: dados.modalidade === 'ENTREGA' && dados.bairroId ? Number(dados.bairroId) : null,
         observacao: dados.observacao,
-        itens: itens.map((i) => ({ produtoId: i.produtoId, quantidade: i.quantidade, observacao: i.observacao })),
+        itens: itens.map((i) => ({ produtoId: i.produtoId, quantidade: i.quantidade, observacao: i.observacao, opcoes: i.opcoes || [] })),
       });
       gravarLocal('nexusfood_cliente', { nomeCliente: dados.nomeCliente, telefoneCliente: dados.telefoneCliente });
       setCarrinho([]);
@@ -273,6 +298,13 @@ export default function CardapioPublico() {
           <footer className="rodape-publico">
             <AssinaturaNexus prefixo="Pedidos online com Nexus Food · um produto" />
           </footer>
+          {escolhendo && (
+            <EscolhaOpcoes
+              produto={escolhendo}
+              onFechar={() => setEscolhendo(null)}
+              onAdicionar={(novo) => { colocarNaSacola(novo); setEscolhendo(null); }}
+            />
+          )}
           {quantidadeTotal > 0 && (
             <button className="barra-sacola" onClick={() => irPara('sacola')}>
               <span>Ver sacola ({quantidadeTotal})</span>
@@ -299,13 +331,16 @@ export default function CardapioPublico() {
                 <h2 className="checkout-titulo">Sua sacola</h2>
                 {itens.length === 0 && <p className="ajuda">Sua sacola está vazia.</p>}
                 {carrinho.map((item, indice) => {
+                  if (!itemValido(item)) return null;
                   const produto = produtosPorId[item.produtoId];
-                  if (!produto || !produto.disponivel) return null;
                   return (
                     <div key={indice} className="item-sacola">
                       <div className="item-sacola-linha">
-                        <span className="nome">{produto.nome}</span>
-                        <span className="valor">{moeda(Number(produto.preco) * item.quantidade)}</span>
+                        <span className="nome">
+                          {produto.nome}
+                          <OpcoesDoItem opcoes={opcoesDaSacola(produto, item.opcoes || [])} />
+                        </span>
+                        <span className="valor">{moeda(precoComOpcoes(produto, item.opcoes || []) * item.quantidade)}</span>
                       </div>
                       <div className="item-sacola-linha">
                         <div className="controle-qtd">

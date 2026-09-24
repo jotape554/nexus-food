@@ -37,7 +37,8 @@ public record AcompanhamentoPedidoResponse(
         String restauranteTelefone,
         List<Item> itens
 ) {
-    public record Item(String nomeProduto, Integer quantidade, BigDecimal subtotal, String observacao) {}
+    public record Item(String nomeProduto, Integer quantidade, BigDecimal subtotal, String observacao,
+                       List<PedidoResponse.OpcaoEscolhida> opcoes) {}
 
     public static AcompanhamentoPedidoResponse de(Pedido p) {
         return new AcompanhamentoPedidoResponse(p.getCodigoPublico(), p.getNumeroDia(), p.getStatus(), p.getModalidade(),
@@ -46,7 +47,8 @@ public record AcompanhamentoPedidoResponse(
                 p.getSaiuParaEntregaEm(), p.getConcluidoEm(), p.getCanceladoEm(), p.getMotivoCancelamento(),
                 p.getRestaurante().getNome(), p.getRestaurante().getSlug(), p.getRestaurante().getTelefone(),
                 p.getItens().stream()
-                        .map(i -> new Item(i.getNomeProduto(), i.getQuantidade(), i.getSubtotal(), i.getObservacao()))
+                        .map(i -> new Item(i.getNomeProduto(), i.getQuantidade(), i.getSubtotal(), i.getObservacao(),
+                                i.getOpcoes().stream().map(PedidoResponse.OpcaoEscolhida::de).toList()))
                         .toList());
     }
 }

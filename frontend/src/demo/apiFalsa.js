@@ -1,6 +1,6 @@
 import { criarEstadoInicial, VERSAO_DADOS } from './dadosIniciais';
 import { dinheiro, diaOperacional, ErroRegra } from './regras';
-import { criarPedido, mudarStatus, paraAcompanhamento, paraPainel, proximoId, USUARIO_DEMO } from './servico';
+import { criarPedido, mudarStatus, paraAcompanhamento, paraPainel, precoMinimo, proximoId, USUARIO_DEMO } from './servico';
 import { gerarRelatorio } from './relatorio';
 import { gerarNexus } from './nexus';
 import {
@@ -117,7 +117,42 @@ function configuracao() {
 }
 
 function produtoResposta(p) {
-  return { id: p.id, categoriaId: p.categoriaId, nome: p.nome, descricao: p.descricao, preco: p.preco, imagemUrl: p.imagemUrl, disponivel: p.disponivel, ordem: p.ordem };
+  return {
+    id: p.id, categoriaId: p.categoriaId, nome: p.nome, descricao: p.descricao, preco: p.preco, precoMinimo: precoMinimo(p),
+    imagemUrl: p.imagemUrl, disponivel: p.disponivel, ordem: p.ordem,
+    grupos: (p.grupos || []).map((g) => ({ id: g.id, nome: g.nome, minimo: g.minimo, maximo: g.maximo, cobranca: g.cobranca, opcoes: g.opcoes.map((o) => ({ ...o })) })),
+  };
+}
+
+/** Espelha CatalogoService.salvarOpcoes: substitui a lista, mantendo ids que vierem. */
+function salvarOpcoes(produto, body) {
+  exigir(Array.isArray(body.grupos), 'Envie a lista de grupos (pode ser vazia).');
+  exigir(body.grupos.length <= 10, 'Use no máximo 10 grupos de opções por produto.');
+  const atuais = produto.grupos || [];
+  produto.grupos = body.grupos.map((g) => {
+    const nome = texto(g.nome);
+    exigir(nome, 'Dê um nome ao grupo (ex.: Tamanho, Adicionais).');
+    exigir(Array.isArray(g.opcoes) && g.opcoes.length > 0, 'Cada grupo precisa de pelo menos uma opção.');
+    const minimo = Number(g.minimo);
+    const maximo = Number(g.maximo);
+    exigir(Number.isInteger(minimo) && minimo >= 0, 'O mínimo de escolhas não pode ser negativo.');
+    exigir(Number.isInteger(maximo) && maximo >= 1, 'O máximo de escolhas deve ser pelo menos 1.');
+    exigir(minimo <= maximo, `Em "${nome}", o mínimo de escolhas não pode ser maior que o máximo.`);
+    exigir(minimo <= g.opcoes.length, `Em "${nome}", o mínimo de escolhas é maior que o número de opções.`);
+    const existente = g.id != null ? atuais.find((x) => x.id === Number(g.id)) : null;
+    if (g.id != null && !existente) throw naoEncontrado('Grupo de opções');
+    return {
+      id: existente ? existente.id : proximoId(estado, 'grupo'),
+      nome, minimo, maximo: Math.min(maximo, g.opcoes.length), cobranca: g.cobranca || 'SOMA',
+      opcoes: g.opcoes.map((o) => {
+        exigir(texto(o.nome), 'Dê um nome a cada opção.');
+        const preco = validarNumero(o.preco, 0, 'O preço da opção não pode ser negativo.');
+        const antiga = o.id != null ? existente?.opcoes.find((x) => x.id === Number(o.id)) : null;
+        if (o.id != null && !antiga) throw naoEncontrada('Opção');
+        return { id: antiga ? antiga.id : proximoId(estado, 'opcao'), nome: texto(o.nome), preco: dinheiro(preco), disponivel: o.disponivel !== false };
+      }),
+    };
+  });
 }
 
 const porOrdemENome = (a, b) => (a.ordem - b.ordem) || a.nome.localeCompare(b.nome, 'pt-BR');
@@ -141,7 +176,7 @@ function validarNumero(valor, minimo, mensagem) {
 function dadosProduto(body) {
   exigir(body.categoriaId, 'Escolha a categoria do produto.');
   exigir(texto(body.nome), 'Informe o nome do produto.');
-  const preco = validarNumero(body.preco, 0.01, 'O preço deve ser maior que zero.');
+  const preco = validarNumero(body.preco, 0, 'O preço não pode ser negativo.');
   buscar(estado.categorias, body.categoriaId, 'Categoria', true);
   return {
     categoriaId: Number(body.categoriaId), nome: texto(body.nome), descricao: texto(body.descricao), preco: dinheiro(preco),
@@ -367,7 +402,7 @@ const ROTAS = [
   }],
   ['GET', /^\/api\/produtos$/, () => estado.produtos.filter((p) => p.ativo).sort(porOrdemENome).map(produtoResposta)],
   ['POST', /^\/api\/produtos$/, (_m, _q, b) => {
-    const produto = { id: proximoId(estado, 'produto'), ...dadosProduto(b), ativo: true, ordem: Number(b.ordem) || 0, criadoEm: new Date().toISOString() };
+    const produto = { id: proximoId(estado, 'produto'), ...dadosProduto(b), grupos: [], ativo: true, ordem: Number(b.ordem) || 0, criadoEm: new Date().toISOString() };
     estado.produtos.push(produto);
     salvar();
     return produtoResposta(produto);
@@ -381,6 +416,20 @@ const ROTAS = [
   ['PATCH', /^\/api\/produtos\/(\d+)\/disponivel$/, (m, q) => {
     const produto = buscar(estado.produtos.filter((p) => p.ativo), m[1], 'Produto');
     produto.disponivel = q.get('valor') === 'true';
+    salvar();
+    return produtoResposta(produto);
+  }],
+  ['PUT', /^\/api\/produtos\/(\d+)\/opcoes$/, (m, _q, b) => {
+    const produto = buscar(estado.produtos.filter((p) => p.ativo), m[1], 'Produto');
+    salvarOpcoes(produto, b);
+    salvar();
+    return produtoResposta(produto);
+  }],
+  ['PATCH', /^\/api\/produtos\/(\d+)\/opcoes\/(\d+)\/disponivel$/, (m, q) => {
+    const produto = buscar(estado.produtos.filter((p) => p.ativo), m[1], 'Produto');
+    const opcao = (produto.grupos || []).flatMap((g) => g.opcoes).find((o) => o.id === Number(m[2]));
+    if (!opcao) throw naoEncontrada('Opção');
+    opcao.disponivel = q.get('valor') === 'true';
     salvar();
     return produtoResposta(produto);
   }],

@@ -2,6 +2,7 @@ package com.nexusfood.pedidos.dto;
 
 import com.nexusfood.pedidos.enums.*;
 import com.nexusfood.pedidos.model.ItemPedido;
+import com.nexusfood.pedidos.model.ItemPedidoOpcao;
 import com.nexusfood.pedidos.model.Pedido;
 import com.nexusfood.pedidos.model.PedidoEvento;
 
@@ -43,10 +44,16 @@ public record PedidoResponse(
     public record ClienteResumo(Long id, String nome, String telefone) {}
 
     public record Item(Long produtoId, String nomeProduto, BigDecimal precoUnitario, Integer quantidade,
-                       BigDecimal subtotal, String observacao) {
+                       BigDecimal subtotal, String observacao, List<OpcaoEscolhida> opcoes) {
         static Item de(ItemPedido i) {
             return new Item(i.getProduto().getId(), i.getNomeProduto(), i.getPrecoUnitario(), i.getQuantidade(),
-                    i.getSubtotal(), i.getObservacao());
+                    i.getSubtotal(), i.getObservacao(), i.getOpcoes().stream().map(OpcaoEscolhida::de).toList());
+        }
+    }
+
+    public record OpcaoEscolhida(String grupo, String nome, BigDecimal preco) {
+        public static OpcaoEscolhida de(ItemPedidoOpcao o) {
+            return new OpcaoEscolhida(o.getNomeGrupo(), o.getNomeOpcao(), o.getPreco());
         }
     }
 

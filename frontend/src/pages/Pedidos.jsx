@@ -5,6 +5,7 @@ import { DEMO } from '../demo/modo';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 import RecursoBloqueado from '../components/RecursoBloqueado';
+import OpcoesDoItem from '../components/OpcoesDoItem';
 import Icone, { ICONE_MODALIDADE, ICONE_PAGAMENTO } from '../components/Icone';
 import {
   moeda, hora, telefone, numeroPedido, urgencia, minutosDesde,
@@ -88,6 +89,7 @@ function CartaoPedido({ pedido, agora, onAvancar, onAbrir, ocupado }) {
           {pedido.itens.slice(0, MAX_ITENS_CARTAO).map((item, i) => (
             <li key={i}>
               <span className="qtd">{item.quantidade}×</span> {item.nomeProduto}
+              <OpcoesDoItem opcoes={item.opcoes} />
               {item.observacao && <div className="obs">{item.observacao}</div>}
             </li>
           ))}
@@ -149,6 +151,7 @@ function DetalhePedido({ id, onFechar, onAvancar, onCancelar }) {
               <td>{item.quantidade}×</td>
               <td>
                 {item.nomeProduto}
+                <OpcoesDoItem opcoes={item.opcoes} />
                 {item.observacao && <div className="obs">Obs.: {item.observacao}</div>}
               </td>
               <td style={{ textAlign: 'right' }}>{moeda(item.subtotal)}</td>

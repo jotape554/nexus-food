@@ -31,6 +31,57 @@ export function identificarCliente(estado, telefone, nome, agoraIso) {
   return cliente;
 }
 
+const COBRANCA = {
+  SOMA: (precos) => precos.reduce((a, b) => a + b, 0),
+  MAIOR: (precos) => (precos.length ? Math.max(...precos) : 0),
+  MEDIA: (precos) => (precos.length ? precos.reduce((a, b) => a + b, 0) / precos.length : 0),
+};
+
+/** Espelha PedidoService.opcoesEscolhidas: mesmas regras e mensagens. */
+function opcoesEscolhidas(produto, ids = []) {
+  if (new Set(ids).size !== ids.length) throw new ErroRegra(`A mesma opção veio repetida em "${produto.nome}". Atualize a página.`);
+  const grupos = produto.grupos || [];
+  const doProduto = {};
+  grupos.forEach((g) => g.opcoes.forEach((o) => { doProduto[o.id] = { ...o, grupo: g }; }));
+  const escolhidas = ids.map((id) => {
+    const opcao = doProduto[id];
+    if (!opcao) throw new ErroRegra(`As opções de "${produto.nome}" mudaram. Atualize a página e escolha de novo.`);
+    if (!opcao.disponivel) throw new ErroRegra(`"${opcao.nome}" esgotou em "${produto.nome}". Escolha outra opção.`);
+    return opcao;
+  });
+  grupos.forEach((g) => {
+    const n = escolhidas.filter((o) => o.grupo.id === g.id).length;
+    if (n < g.minimo) {
+      throw new ErroRegra(g.minimo === 1 && g.maximo === 1
+        ? `Escolha ${g.nome.toLowerCase()} em "${produto.nome}".`
+        : `Escolha pelo menos ${g.minimo} em ${g.nome} ("${produto.nome}").`);
+    }
+    if (n > g.maximo) throw new ErroRegra(`Escolha no máximo ${g.maximo} em ${g.nome} ("${produto.nome}").`);
+  });
+  return escolhidas;
+}
+
+/** Preço do produto + o valor de cada grupo (soma, mais cara ou média). */
+export function precoComOpcoes(produto, escolhidas) {
+  let total = produto.preco;
+  (produto.grupos || []).forEach((g) => {
+    total += COBRANCA[g.cobranca || 'SOMA'](escolhidas.filter((o) => o.grupo.id === g.id).map((o) => o.preco));
+  });
+  return dinheiro(total);
+}
+
+/** "A partir de": o mais barato possível em cada grupo obrigatório (ProdutoResponse.precoMinimo). */
+export function precoMinimo(produto) {
+  let total = produto.preco;
+  (produto.grupos || []).forEach((g) => {
+    if (g.minimo <= 0) return;
+    const precos = g.opcoes.filter((o) => o.disponivel).map((o) => o.preco).sort((a, b) => a - b).slice(0, g.minimo);
+    if (precos.length < g.minimo) return;
+    total += COBRANCA[g.cobranca || 'SOMA'](precos);
+  });
+  return dinheiro(total);
+}
+
 /** Espelha PedidoService.criarPublico: nada de preço vindo do cliente; tudo recalculado aqui. */
 export function criarPedido(estado, req, agoraMs) {
   const r = estado.restaurante;
@@ -52,13 +103,17 @@ export function criarPedido(estado, req, agoraMs) {
     }
     if (!produto.disponivel) throw new ErroRegra(`"${produto.nome}" esgotou. Remova-o do pedido para continuar.`);
     const quantidade = Math.max(1, Math.min(99, Number(itemReq.quantidade) || 1));
+    const escolhidas = opcoesEscolhidas(produto, (itemReq.opcoes || []).map(Number));
+    const precoUnitario = precoComOpcoes(produto, escolhidas);
+    if (precoUnitario <= 0) throw new ErroRegra(`"${produto.nome}" está sem preço no cardápio. Escolha outro produto.`);
     return {
       produtoId: produto.id,
       nomeProduto: produto.nome,
-      precoUnitario: produto.preco,
+      precoUnitario,
       quantidade,
-      subtotal: dinheiro(produto.preco * quantidade),
+      subtotal: dinheiro(precoUnitario * quantidade),
       observacao: itemReq.observacao?.trim() || null,
+      opcoes: escolhidas.map((o) => ({ grupo: o.grupo.nome, nome: o.nome, preco: o.preco })),
     };
   });
 
@@ -169,6 +224,6 @@ export function paraAcompanhamento(estado, p) {
     restauranteNome: r.nome,
     restauranteSlug: r.slug,
     restauranteTelefone: r.telefone,
-    itens: p.itens.map((i) => ({ nomeProduto: i.nomeProduto, quantidade: i.quantidade, subtotal: i.subtotal, observacao: i.observacao })),
+    itens: p.itens.map((i) => ({ nomeProduto: i.nomeProduto, quantidade: i.quantidade, subtotal: i.subtotal, observacao: i.observacao, opcoes: i.opcoes || [] })),
   };
 }

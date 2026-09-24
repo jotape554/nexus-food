@@ -62,5 +62,9 @@ public class CriarPedidoRequest {
 
         @Size(max = 300, message = "Observação do item muito longa.")
         private String observacao;
+
+        /** Ids das opções escolhidas (tamanho, borda, adicionais). Preço sempre calculado no servidor. */
+        @Size(max = 60, message = "Opções demais em um item.")
+        private List<Long> opcoes;
     }
 }

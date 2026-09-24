@@ -66,7 +66,7 @@ Se mudar uma regra de pedido no backend, mude também em `src/demo/regras.js` e
 | Cliente final | `/r/{slug}` | Cardápio e carrinho |
 | Cliente final | `/pedido/{codigo}` | Acompanhamento do pedido |
 | Restaurante | `/painel/pedidos` | Painel de pedidos (atualiza sozinho) |
-| Restaurante | `/painel/cardapio` | Categorias e produtos |
+| Restaurante | `/painel/cardapio` | Categorias, produtos e opções (tamanho, borda, adicionais, meio a meio) |
 | Restaurante | `/painel/relatorios` | Vendas por dia, semana e mês, com comparação e planilha |
 | Restaurante | `/painel/nexus` | Nexus Score: nota, áreas, indicadores, evolução e insights |
 | Restaurante | `/painel/configuracoes` | Modalidades, taxa de entrega, bairros, horários |

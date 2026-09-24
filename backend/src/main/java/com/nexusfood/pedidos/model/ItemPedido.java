@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Nome e preço são COPIADOS do produto no momento da venda: mudar o preço amanhã não pode
@@ -48,4 +50,15 @@ public class ItemPedido {
 
     @Column(length = 300)
     private String observacao;
+
+    /** Opções escolhidas (tamanho, borda, adicionais), já copiadas. precoUnitario inclui o que elas somam. */
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
+    @Builder.Default
+    private List<ItemPedidoOpcao> opcoes = new ArrayList<>();
+
+    public void adicionarOpcao(ItemPedidoOpcao opcao) {
+        opcao.setItem(this);
+        opcoes.add(opcao);
+    }
 }

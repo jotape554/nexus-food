@@ -2,6 +2,7 @@ package com.nexusfood.catalogo.controller;
 
 import com.nexusfood.plataforma.acesso.RequerRecurso;
 import com.nexusfood.plataforma.enums.Recurso;
+import com.nexusfood.catalogo.dto.OpcoesProdutoRequest;
 import com.nexusfood.catalogo.dto.ProdutoRequest;
 import com.nexusfood.catalogo.dto.ProdutoResponse;
 import com.nexusfood.catalogo.service.CatalogoService;
@@ -42,6 +43,19 @@ public class ProdutoController {
     @PatchMapping("/{id}/disponivel")
     public ProdutoResponse disponivel(@PathVariable Long id, @RequestParam boolean valor) {
         return catalogoService.definirDisponivel(id, valor);
+    }
+
+    /** Adicionais e variações: grava todos os grupos do produto de uma vez. */
+    @PutMapping("/{id}/opcoes")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR','GERENTE')")
+    public ProdutoResponse salvarOpcoes(@PathVariable Long id, @Valid @RequestBody OpcoesProdutoRequest req) {
+        return catalogoService.salvarOpcoes(id, req);
+    }
+
+    /** Esgotar/liberar uma opção: liberado para toda a equipe, como o esgotado do produto. */
+    @PatchMapping("/{id}/opcoes/{opcaoId}/disponivel")
+    public ProdutoResponse opcaoDisponivel(@PathVariable Long id, @PathVariable Long opcaoId, @RequestParam boolean valor) {
+        return catalogoService.definirOpcaoDisponivel(id, opcaoId, valor);
     }
 
     @DeleteMapping("/{id}")

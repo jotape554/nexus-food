@@ -28,8 +28,11 @@ de `relatorios`.
 1. **Tenant só pelo token.** `SecurityUtils.restauranteAtualId()`; nunca aceite `restauranteId`
    vindo do corpo/URL de uma rota `/api/**`. Toda busca por id usa `findByIdAndRestauranteId`.
 2. **Preço sempre no servidor.** O pedido público não traz preço; `PedidoService` recalcula a
-   partir do `Produto`. `ItemPedido` guarda cópia de nome e preço; o pedido guarda cópia da taxa
-   e do bairro.
+   partir do `Produto` e das opções escolhidas (ids). `ItemPedido` guarda cópia de nome e preço
+   (já com as opções) e `ItemPedidoOpcao` guarda cópia de grupo, opção e preço; o pedido guarda
+   cópia da taxa e do bairro.
+   Opções: `GrupoOpcoes` (mínimo/máximo de escolhas, cobrança `SOMA`/`MAIOR`/`MEDIA`) → `Opcao`.
+   A mesma conta existe no navegador (`frontend/src/api/opcoes.js`) só para mostrar preço.
 3. **Status só por `Pedido.transicionarPara(...)`.** Ele valida a transição, grava o horário da
    etapa (`*Em`) e o `PedidoEvento`. Nunca altere `status` ou os `*Em` diretamente.
 4. **"Agora" e "hoje" só por `RelogioRestaurante` / `Clock` injetado.** Nada de

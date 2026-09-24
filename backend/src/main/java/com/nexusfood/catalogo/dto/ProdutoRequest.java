@@ -22,7 +22,8 @@ public class ProdutoRequest {
     private String descricao;
 
     @NotNull(message = "Informe o preço do produto.")
-    @DecimalMin(value = "0.01", message = "O preço deve ser maior que zero.")
+    // Pode ser zero quando o preço vem todo das opções (ex.: pizza meio a meio, tamanho obrigatório).
+    @DecimalMin(value = "0.00", message = "O preço não pode ser negativo.")
     private BigDecimal preco;
 
     @Size(max = 500, message = "Endereço da imagem muito longo.")

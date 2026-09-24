@@ -1,6 +1,6 @@
 import { criarPedido, mudarStatus, proximoId } from './servico';
 
-export const VERSAO_DADOS = 4; // mude ao alterar os dados de exemplo: quem já abriu a demo recebe os novos
+export const VERSAO_DADOS = 5; // mude ao alterar os dados de exemplo: quem já abriu a demo recebe os novos
 export const SLUG_DEMO = 'cantina-da-nona';
 
 const CARDAPIO = {
@@ -28,6 +28,47 @@ const CARDAPIO = {
   ],
 };
 
+// Adicionais e variações: [grupo, mínimo, máximo, cobrança, [[opção, preço], ...]].
+const OPCOES_POR_CATEGORIA = {
+  Pizzas: [
+    ['Tamanho', 1, 1, 'SOMA', [['Média (6 fatias)', 0], ['Grande (8 fatias)', 14]]],
+    ['Borda recheada', 0, 1, 'SOMA', [['Catupiry', 8], ['Cheddar', 8]]],
+    ['Adicionais', 0, 3, 'SOMA', [['Bacon', 6], ['Azeitona extra', 3], ['Queijo extra', 5]]],
+  ],
+  Massas: [
+    ['Adicionais', 0, 2, 'SOMA', [['Parmesão extra', 4], ['Bacon', 6]]],
+  ],
+};
+
+function criarGrupos(estado, produto, grupos) {
+  produto.grupos = grupos.map(([nome, minimo, maximo, cobranca, opcoes]) => ({
+    id: proximoId(estado, 'grupo'), nome, minimo, maximo, cobranca,
+    opcoes: opcoes.map(([nomeOpcao, preco]) => ({ id: proximoId(estado, 'opcao'), nome: nomeOpcao, preco, disponivel: true })),
+  }));
+}
+
+/**
+ * Ids das opções de um item de exemplo: pelos nomes, quando o pedido diz; senão sorteia uma
+ * opção de cada grupo obrigatório e, às vezes, uma dos opcionais.
+ */
+function opcoesDoItem(produto, nomes, sorteio) {
+  const grupos = produto.grupos || [];
+  if (nomes) return nomes.map((n) => grupos.flatMap((g) => g.opcoes).find((o) => o.nome.startsWith(n)).id);
+  const ids = [];
+  grupos.forEach((g) => {
+    if (g.minimo > 0) {
+      const restantes = [...g.opcoes];
+      for (let i = 0; i < g.minimo; i++) {
+        const k = sorteio ? Math.floor(sorteio.numero() * restantes.length) : 0;
+        ids.push(restantes.splice(k, 1)[0].id);
+      }
+    } else if (sorteio && sorteio.numero() < 0.2) {
+      ids.push(sorteio.escolher(g.opcoes).id);
+    }
+  });
+  return ids;
+}
+
 const BAIRROS = [['Bela Vista', 6.5], ['Centro', 7], ['Consolação', 5], ['Jardins', 8], ['Pinheiros', 10]];
 
 /**
@@ -42,15 +83,15 @@ const PEDIDOS = [
     [['CONFIRMADO', 1], ['EM_PREPARO', 3], ['PRONTO', 28], ['CONCLUIDO', 36]]],
   [95, 'Gustavo Lima', '11987650006', 'RETIRADA', 'PIX', [['Nhoque ao sugo', 1], ['Panna cotta', 1]], null, null, null, null,
     [['CANCELADO', 6, 'CLIENTE_DESISTIU']]],
-  [44, 'Beatriz Nogueira', '11987650005', 'ENTREGA', 'PIX', [['Portuguesa', 1], ['Água sem gás', 1]], 'Consolação', 'Rua Frei Caneca, 300 — bloco B', null, null,
+  [44, 'Beatriz Nogueira', '11987650005', 'ENTREGA', 'PIX', [['Portuguesa', 1, null, ['Grande', 'Bacon', 'Azeitona']], ['Água sem gás', 1]], 'Consolação', 'Rua Frei Caneca, 300 — bloco B', null, null,
     [['CONFIRMADO', 2], ['EM_PREPARO', 4], ['PRONTO', 29], ['SAIU_PARA_ENTREGA', 32]]],
-  [38, 'Luciana Prado', '11987650003', 'ENTREGA', 'DINHEIRO', [['Quatro queijos', 1], ['Calabresa', 1], ['Suco natural 500ml', 2]], 'Jardins', 'Alameda Santos, 1200 — casa 3', 150, 'Interfone quebrado, ligar quando chegar',
+  [38, 'Luciana Prado', '11987650003', 'ENTREGA', 'DINHEIRO', [['Quatro queijos', 1, null, ['Média']], ['Calabresa', 1, null, ['Média']], ['Suco natural 500ml', 2]], 'Jardins', 'Alameda Santos, 1200 — casa 3', 150, 'Interfone quebrado, ligar quando chegar',
     [['CONFIRMADO', 3], ['EM_PREPARO', 6]]],
   [22, 'Pedro Henrique', '11987650002', 'RETIRADA', 'CARTAO_CREDITO', [['Lasanha à bolonhesa', 2], ['Tiramisù', 1]], null, null, null, null,
     [['CONFIRMADO', 2]]],
   [18, 'Rafael Costa', '11987650004', 'CONSUMO_LOCAL', 'CARTAO_DEBITO', [['Fettuccine Alfredo', 1], ['Vinho tinto (taça)', 1]], null, null, null, 'Mesa 7',
     [['CONFIRMADO', 1], ['EM_PREPARO', 2], ['PRONTO', 16]]],
-  [7, 'Mariana Alves', '11987650001', 'ENTREGA', 'PIX', [['Margherita', 1, 'Borda bem assada'], ['Refrigerante lata', 2]], 'Bela Vista', 'Rua Treze de Maio, 800 — apto 41', null, null,
+  [7, 'Mariana Alves', '11987650001', 'ENTREGA', 'PIX', [['Margherita', 1, 'Borda bem assada', ['Grande', 'Catupiry']], ['Refrigerante lata', 2]], 'Bela Vista', 'Rua Treze de Maio, 800 — apto 41', null, null,
     []],
 ];
 
@@ -105,11 +146,13 @@ function gerarHistorico(estado, agoraMs, produtoPorNome) {
       const criadoMs = inicioDia + hora * 3600000 + Math.floor(s.numero() * 60) * 60000;
       const [nome, telefone] = s.numero() < 0.55 ? s.escolher(frequentes) : s.escolher(clientes);
       const modalidade = s.escolher(['ENTREGA', 'ENTREGA', 'ENTREGA', 'RETIRADA', 'RETIRADA', 'CONSUMO_LOCAL']);
-      const itens = [{ produtoId: produtoPorNome[s.escolher(PRATOS)].id, quantidade: s.numero() < 0.2 ? 2 : 1 }];
+      const item = (nome) => {
+        const produto = produtoPorNome[nome];
+        return { produtoId: produto.id, quantidade: s.numero() < 0.2 ? 2 : 1, opcoes: opcoesDoItem(produto, null, s) };
+      };
+      const itens = [item(s.escolher(PRATOS))];
       const extras = Math.floor(s.numero() * 3);
-      for (let i = 0; i < extras; i++) {
-        itens.push({ produtoId: produtoPorNome[s.escolher(PREFERIDOS)].id, quantidade: s.numero() < 0.2 ? 2 : 1 });
-      }
+      for (let i = 0; i < extras; i++) itens.push(item(s.escolher(PREFERIDOS)));
       const pedido = criarPedido(estado, {
         chaveIdempotencia: `historico-${d}-${n}`,
         nomeCliente: nome,
@@ -188,8 +231,26 @@ export function criarEstadoInicial(agoraMs) {
       estado.produtos.push(produto);
       produtoPorNome[nome] = produto;
       produto._disponivelFinal = disponivel;
+      if (OPCOES_POR_CATEGORIA[nomeCategoria]) criarGrupos(estado, produto, OPCOES_POR_CATEGORIA[nomeCategoria]);
+      else produto.grupos = [];
     });
   });
+
+  // Meio a meio: preço vem do sabor mais caro (+ tamanho).
+  const pizzas = estado.categorias.find((c) => c.nome === 'Pizzas');
+  const saboresPizza = estado.produtos.filter((p) => p.categoriaId === pizzas.id);
+  const meioAMeio = {
+    id: proximoId(estado, 'produto'), categoriaId: pizzas.id, nome: 'Pizza meio a meio',
+    descricao: 'Escolha dois sabores. Cobramos o sabor mais caro.', preco: 0,
+    imagemUrl: null, disponivel: true, ativo: true, ordem: saboresPizza.length, criadoEm: estado.restaurante.criadoEm, _disponivelFinal: true,
+  };
+  criarGrupos(estado, meioAMeio, [
+    OPCOES_POR_CATEGORIA.Pizzas[0],
+    ['Sabores', 2, 2, 'MAIOR', saboresPizza.map((p) => [p.nome, p.preco])],
+    OPCOES_POR_CATEGORIA.Pizzas[1],
+  ]);
+  estado.produtos.push(meioAMeio);
+  produtoPorNome[meioAMeio.nome] = meioAMeio;
 
   gerarHistorico(estado, agoraMs, produtoPorNome);
 
@@ -205,7 +266,9 @@ export function criarEstadoInicial(agoraMs) {
       enderecoEntrega: endereco,
       bairroId: bairro ? estado.bairros.find((b) => b.nome === bairro).id : null,
       observacao: obs,
-      itens: itens.map(([produto, quantidade, observacao]) => ({ produtoId: produtoPorNome[produto].id, quantidade, observacao })),
+      itens: itens.map(([produto, quantidade, observacao, opcoes]) => ({
+        produtoId: produtoPorNome[produto].id, quantidade, observacao, opcoes: opcoesDoItem(produtoPorNome[produto], opcoes),
+      })),
     }, criadoMs);
     etapas.forEach(([status, minutosDepois, motivo]) => mudarStatus(pedido, status, criadoMs + minutosDepois * 60000, motivo));
   });

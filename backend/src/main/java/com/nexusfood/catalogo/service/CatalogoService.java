@@ -5,6 +5,10 @@ import com.nexusfood.catalogo.dto.CategoriaRequest;
 import com.nexusfood.catalogo.dto.ProdutoRequest;
 import com.nexusfood.catalogo.dto.ProdutoResponse;
 import com.nexusfood.catalogo.model.Categoria;
+import com.nexusfood.catalogo.dto.OpcoesProdutoRequest;
+import com.nexusfood.catalogo.enums.CobrancaGrupo;
+import com.nexusfood.catalogo.model.GrupoOpcoes;
+import com.nexusfood.catalogo.model.Opcao;
 import com.nexusfood.catalogo.model.Produto;
 import com.nexusfood.catalogo.repository.CategoriaRepository;
 import com.nexusfood.catalogo.repository.ProdutoRepository;
@@ -19,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -112,6 +118,84 @@ public class CatalogoService {
         Produto produto = buscarProduto(id);
         produto.setDisponivel(disponivel);
         return ProdutoResponse.de(produtoRepository.save(produto));
+    }
+
+    /**
+     * Salva os grupos de opções do produto (substitui a lista inteira, mantendo os ids que vierem
+     * para não quebrar sacolas abertas de clientes). Regras além das anotações do request:
+     * mínimo ≤ máximo, mínimo ≤ número de opções, ids precisam ser deste produto.
+     */
+    @Transactional
+    public ProdutoResponse salvarOpcoes(Long produtoId, OpcoesProdutoRequest req) {
+        Produto produto = buscarProduto(produtoId);
+        Map<Long, GrupoOpcoes> gruposAtuais = produto.getGrupos().stream()
+                .collect(Collectors.toMap(GrupoOpcoes::getId, g -> g));
+
+        List<GrupoOpcoes> novos = new ArrayList<>();
+        for (int i = 0; i < req.grupos().size(); i++) {
+            OpcoesProdutoRequest.Grupo gReq = req.grupos().get(i);
+            String nomeGrupo = gReq.nome().trim();
+            if (gReq.minimo() > gReq.maximo()) {
+                throw new RegraDeNegocioException("Em \"" + nomeGrupo + "\", o mínimo de escolhas não pode ser maior que o máximo.");
+            }
+            if (gReq.minimo() > gReq.opcoes().size()) {
+                throw new RegraDeNegocioException("Em \"" + nomeGrupo + "\", o mínimo de escolhas é maior que o número de opções.");
+            }
+
+            GrupoOpcoes grupo;
+            if (gReq.id() != null) {
+                grupo = gruposAtuais.remove(gReq.id());
+                if (grupo == null) throw new RecursoNaoEncontradoException("Grupo de opções não encontrado");
+            } else {
+                grupo = GrupoOpcoes.builder().produto(produto).build();
+            }
+            grupo.setNome(nomeGrupo);
+            grupo.setMinimo(gReq.minimo());
+            grupo.setMaximo(Math.min(gReq.maximo(), gReq.opcoes().size()));
+            grupo.setCobranca(gReq.cobranca() != null ? gReq.cobranca() : CobrancaGrupo.SOMA);
+            grupo.setOrdem(i);
+            atualizarOpcoes(grupo, gReq.opcoes());
+            novos.add(grupo);
+        }
+
+        produto.getGrupos().clear();
+        produto.getGrupos().addAll(novos);
+        produtoRepository.saveAndFlush(produto);
+        return ProdutoResponse.de(produto);
+    }
+
+    private void atualizarOpcoes(GrupoOpcoes grupo, List<OpcoesProdutoRequest.Opcao> opcoesReq) {
+        Map<Long, Opcao> atuais = grupo.getOpcoes().stream().collect(Collectors.toMap(Opcao::getId, o -> o));
+        List<Opcao> novas = new ArrayList<>();
+        for (int i = 0; i < opcoesReq.size(); i++) {
+            OpcoesProdutoRequest.Opcao oReq = opcoesReq.get(i);
+            Opcao opcao;
+            if (oReq.id() != null) {
+                opcao = atuais.remove(oReq.id());
+                if (opcao == null) throw new RecursoNaoEncontradoException("Opção não encontrada");
+            } else {
+                opcao = Opcao.builder().grupo(grupo).build();
+            }
+            opcao.setNome(oReq.nome().trim());
+            opcao.setPreco(oReq.preco().setScale(2, RoundingMode.HALF_UP));
+            opcao.setDisponivel(oReq.disponivel() == null || oReq.disponivel());
+            opcao.setOrdem(i);
+            novas.add(opcao);
+        }
+        grupo.getOpcoes().clear();
+        grupo.getOpcoes().addAll(novas);
+    }
+
+    /** Esgotar/liberar uma opção (ex.: acabou o catupiry) sem abrir o produto. Liberado para a equipe toda. */
+    @Transactional
+    public ProdutoResponse definirOpcaoDisponivel(Long produtoId, Long opcaoId, boolean disponivel) {
+        Produto produto = buscarProduto(produtoId);
+        Opcao opcao = produto.getGrupos().stream().flatMap(g -> g.getOpcoes().stream())
+                .filter(o -> o.getId().equals(opcaoId)).findFirst()
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Opção não encontrada"));
+        opcao.setDisponivel(disponivel);
+        produtoRepository.saveAndFlush(produto);
+        return ProdutoResponse.de(produto);
     }
 
     @Transactional

@@ -6,6 +6,8 @@ import { moeda } from '../api/formato';
 import Modal from '../components/Modal';
 import EstadoVazio from '../components/EstadoVazio';
 import { useConfirmacao } from '../components/Confirmacao';
+import EditorOpcoes from '../components/EditorOpcoes';
+import { temPrecoVariavel } from '../api/opcoes';
 
 const PRODUTO_VAZIO = { categoriaId: '', nome: '', descricao: '', preco: '', imagemUrl: '', disponivel: true, ordem: 0 };
 const CATEGORIA_VAZIA = { nome: '', ordem: 0, ativa: true };
@@ -19,6 +21,7 @@ export default function Cardapio() {
   const [form, setForm] = useState({});
   const [erro, setErro] = useState('');
   const [erroLista, setErroLista] = useState('');
+  const [opcoesDe, setOpcoesDe] = useState(null); // produto com o editor de opções aberto
   const [confirmar, confirmacao] = useConfirmacao();
 
   const categoriasQuery = useQuery({ queryKey: ['categorias'], queryFn: () => api.get('/api/categorias') });
@@ -130,7 +133,7 @@ export default function Cardapio() {
                   <col />
                   <col style={{ width: 120 }} />
                   <col style={{ width: 130 }} />
-                  {podeEditar && <col style={{ width: 240 }} />}
+                  <col style={{ width: podeEditar ? 330 : 110 }} />
                 </colgroup>
                 <tbody>
                   {daCategoria.map((p) => (
@@ -138,8 +141,23 @@ export default function Cardapio() {
                       <td>
                         <strong>{p.nome}</strong>
                         {p.descricao && <div className="descricao-produto">{p.descricao}</div>}
+                        {p.grupos?.length > 0 && (
+                          <div className="resumo-grupos">
+                            {p.grupos.map((g) => {
+                              const esgotadas = g.opcoes.filter((o) => !o.disponivel).length;
+                              return (
+                                <span key={g.id} className={esgotadas ? 'esgotada' : ''} title={g.opcoes.map((o) => o.nome).join(', ')}>
+                                  {g.nome} · {g.opcoes.length}{esgotadas ? ` (${esgotadas} esgotada${esgotadas > 1 ? 's' : ''})` : ''}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
                       </td>
-                      <td style={{ whiteSpace: 'nowrap' }}>{moeda(p.preco)}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        {p.grupos?.length > 0 && temPrecoVariavel(p) && <span className="suave" style={{ fontSize: '0.78rem' }}>a partir de<br /></span>}
+                        {moeda(p.precoMinimo ?? p.preco)}
+                      </td>
                       <td>
                         <button
                           className={`badge ${p.disponivel ? 'badge-pedido-concluido' : 'badge-pedido-cancelado'} badge-botao`}
@@ -149,9 +167,15 @@ export default function Cardapio() {
                           {p.disponivel ? 'Disponível' : 'Esgotado'}
                         </button>
                       </td>
+                      {!podeEditar && p.grupos?.length > 0 && (
+                        <td style={{ textAlign: 'right' }}>
+                          <button className="btn btn-secundario" onClick={() => setOpcoesDe(p)}>Opções</button>
+                        </td>
+                      )}
                       {podeEditar && (
                         <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <button className="btn btn-secundario" onClick={() => abrirProduto(p)} style={{ marginRight: 8 }}>Editar</button>
+                          <button className="btn btn-secundario" onClick={() => setOpcoesDe(p)} style={{ marginRight: 8 }}>Opções</button>
                           <button className="btn btn-perigo" onClick={() => remover('produto', p)}>Remover</button>
                         </td>
                       )}
@@ -211,13 +235,16 @@ export default function Cardapio() {
             <div className="form-grid">
               <div className="campo">
                 <label>Preço (R$)</label>
-                <input type="number" step="0.01" min="0.01" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} required />
+                <input type="number" step="0.01" min="0" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} required />
               </div>
               <div className="campo">
                 <label>Ordem</label>
                 <input type="number" value={form.ordem} onChange={(e) => setForm({ ...form, ordem: e.target.value })} />
               </div>
             </div>
+            <p className="dica-campo" style={{ marginTop: -8, marginBottom: 14 }}>
+              Tamanho, borda, adicionais e meio a meio ficam em <strong>Opções</strong>, na lista de produtos. O preço pode ser 0 quando vem todo das opções.
+            </p>
             <div className="campo">
               <label>Endereço da foto (opcional)</label>
               <input value={form.imagemUrl} onChange={(e) => setForm({ ...form, imagemUrl: e.target.value })} placeholder="https://..." />
@@ -234,6 +261,19 @@ export default function Cardapio() {
             </div>
           </form>
         </Modal>
+      )}
+      {opcoesDe && (
+        <EditorOpcoes
+          produto={opcoesDe}
+          produtos={produtos}
+          categoriaNome={categorias.find((c) => c.id === opcoesDe.categoriaId)?.nome}
+          podeEditar={podeEditar}
+          onFechar={() => setOpcoesDe(null)}
+          onSalvo={(salvo, { manterAberto } = {}) => {
+            recarregar();
+            if (manterAberto) setOpcoesDe(salvo); else setOpcoesDe(null);
+          }}
+        />
       )}
       {confirmacao}
     </div>

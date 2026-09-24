@@ -337,3 +337,100 @@
   .pub-card { padding: 20px 16px; }
   .checkout-topo { flex-direction: column; align-items: flex-start; }
 }
+
+/* ---------- opções escolhidas no item (cliente) ---------- */
+
+.opcoes-item { list-style: none; margin: 2px 0 0; padding: 0; font-size: 0.82rem; color: var(--texto-suave); }
+.opcoes-item li { line-height: 1.4; }
+
+/* ---------- folha de opções (tamanho, borda, adicionais) ---------- */
+
+.produto-publico-texto .preco small { font-weight: 500; color: var(--texto-suave); font-size: 0.8rem; }
+
+.folha-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(23, 22, 15, 0.45);
+}
+.folha {
+  width: 100%;
+  max-width: 560px;
+  max-height: 92%;
+  display: flex;
+  flex-direction: column;
+  background: var(--branco);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--sombra-lg);
+  outline: none;
+  animation: folha-sobe 180ms ease-out;
+}
+@keyframes folha-sobe { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .folha { animation: none; } }
+@media (min-width: 700px) {
+  .folha-fundo { align-items: center; padding: 24px; }
+  .folha { border-radius: var(--radius-lg); max-height: 88vh; }
+}
+
+.folha-topo { display: flex; gap: 14px; align-items: flex-start; padding: 20px 20px 14px; border-bottom: 1px solid var(--borda); }
+.folha-topo img { width: 64px; height: 64px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; }
+.folha-topo > div { flex: 1; min-width: 0; }
+.folha-topo h2 { font-size: 1.25rem; margin: 0 0 4px; }
+.folha-topo p { margin: 0; font-size: 0.88rem; color: var(--texto-suave); }
+.folha-fechar { border: none; background: var(--papel-forte); width: 34px; height: 34px; border-radius: 50%; font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
+
+.folha-corpo { overflow-y: auto; overscroll-behavior: contain; padding: 6px 20px 12px; }
+
+.grupo-escolha { border: none; margin: 0; padding: 14px 0 6px; border-bottom: 1px solid var(--borda); scroll-margin-top: 8px; }
+.grupo-escolha legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; padding: 0; margin-bottom: 8px; }
+.grupo-nome { font-weight: 700; font-size: 1rem; }
+.grupo-regra { font-size: 0.82rem; color: var(--texto-suave); }
+.grupo-selo { margin-left: auto; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-full); background: var(--tinta); color: var(--papel); }
+.grupo-selo.ok { background: #E4F3E9; color: #1F6B3C; }
+.grupo-escolha.faltando .grupo-selo { background: var(--vermelho-couro); }
+.grupo-aviso { margin: 4px 0 8px; font-size: 0.82rem; color: var(--vermelho-couro); font-weight: 600; }
+
+.escolha-opcao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  margin: 0;
+  min-height: 48px;
+  font-size: 0.95rem;
+  color: var(--texto);
+  cursor: pointer;
+  border-top: 1px solid var(--papel-forte);
+}
+.escolha-opcao:first-of-type { border-top: none; }
+.escolha-opcao input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--latao); }
+.escolha-nome { flex: 1; min-width: 0; }
+.escolha-preco { font-size: 0.88rem; color: var(--texto-suave); white-space: nowrap; }
+.escolha-opcao.marcada .escolha-nome { font-weight: 600; }
+.escolha-opcao.bloqueada { cursor: not-allowed; opacity: 0.5; }
+
+.folha-corpo .campo { margin: 14px 0 0; }
+
+.folha-rodape {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--borda);
+  background: var(--branco);
+}
+.folha-adicionar { flex: 1; justify-content: center; min-height: 48px; font-size: 0.95rem; }
+.folha-adicionar.incompleto { background: var(--tinta-suave); border-color: var(--tinta-suave); color: var(--papel); }
+
+.item-sacola .nome .opcoes-item { font-weight: 400; }
+
+/* No checkout o cabeçalho é o curto do cardápio: o cartão começa abaixo dele, sem cobrir o "Aberto agora". */
+.cardapio-header + .checkout { margin-top: 16px; }
+
+/* legend dentro de fieldset fica "em cima da borda"; flutuando, vira um título normal do grupo. */
+.grupo-escolha legend { float: left; }
+.grupo-escolha legend + * { clear: both; }
+.grupo-escolha:first-child { padding-top: 16px; }

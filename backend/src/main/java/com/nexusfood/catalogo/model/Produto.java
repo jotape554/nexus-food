@@ -7,6 +7,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "produtos")
@@ -60,4 +62,10 @@ public class Produto {
 
     @Column(nullable = false)
     private Instant criadoEm;
+
+    /** Adicionais e variações (Tamanho, Borda, Adicionais...), na ordem em que o cliente vê. */
+    @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("ordem ASC, id ASC")
+    @Builder.Default
+    private List<GrupoOpcoes> grupos = new ArrayList<>();
 }
