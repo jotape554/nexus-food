@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AssinaturaNexus from './AssinaturaNexus';
 import Icone from './Icone';
+import Logo from './Logo';
 import { NOME_PLANO, PLANO_DO_RECURSO, usePlano } from '../plano';
 
 // perfis: quem vê o item (sem a chave = todos). recurso: mostra o selo do plano quando não está liberado.
@@ -40,7 +41,7 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">Nexus<span>Food</span></div>
+      <div className="sidebar-brand"><Logo tom="escuro" tamanho={28} /></div>
       <nav>
         {itens.map((item) => (
           <NavLink

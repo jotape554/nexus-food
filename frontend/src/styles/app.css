@@ -52,14 +52,11 @@ button {
 }
 
 .sidebar-brand {
-  font-family: var(--fonte-titulo);
-  font-size: 1.35rem;
-  padding: 6px 10px 22px;
+  padding: 4px 10px 20px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
   margin-bottom: 14px;
 }
 
-.sidebar-brand span { color: var(--latao); }
 
 .sidebar nav {
   display: flex;
@@ -401,8 +398,7 @@ label {
     radial-gradient(circle at 90% 95%, rgba(176,141,79,0.10), transparent 45%),
     var(--tinta);
 }
-.auth-marca { font-family: var(--fonte-titulo); font-size: 1.5rem; }
-.auth-marca span { color: var(--latao); }
+.auth-marca .logo-nome { font-size: 1.45rem; }
 .auth-chamada h2 { font-size: 2rem; line-height: 1.2; color: var(--papel); max-width: 520px; margin-bottom: 12px; }
 .auth-chamada p { color: rgba(239, 235, 226, 0.7); max-width: 480px; margin: 0; line-height: 1.55; }
 
@@ -1337,3 +1333,12 @@ label {
 .chip-bloqueado { color: var(--texto-suave); border-style: dashed; }
 .chip .icone { margin-right: 4px; vertical-align: -1px; }
 .relatorios .recurso-bloqueado { margin-bottom: 16px; }
+
+/* ---------- logo ---------- */
+
+.logo { display: inline-flex; align-items: center; gap: 10px; line-height: 1; }
+.logo-simbolo { flex-shrink: 0; display: block; }
+.logo-nome { font-family: var(--fonte-nexus); font-weight: 700; font-size: 1.25rem; letter-spacing: -0.03em; }
+.logo-nome span { color: var(--latao); margin-left: 0.18em; }
+.logo-escuro .logo-nome { color: var(--papel); }
+.logo-claro .logo-nome { color: var(--tinta); }

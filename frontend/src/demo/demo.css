@@ -19,8 +19,7 @@
 
 .demo-marca { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .demo-assinatura { font-size: 0.75rem; }
-.demo-marca strong { font-family: var(--fonte-titulo); font-size: 1.2rem; font-weight: 500; }
-.demo-marca strong span { color: var(--latao); }
+.demo-marca .logo-nome { font-size: 1.1rem; }
 .demo-selo {
   font-size: 0.7rem;
   font-weight: 700;

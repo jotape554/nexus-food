@@ -7,6 +7,7 @@ import { aoMudar, definirPlanoDemo, planoDemo, reiniciarDemonstracao } from './a
 import { NOME, ORDEM } from './planos';
 import { SLUG_DEMO } from './dadosIniciais';
 import AssinaturaNexus from '../components/AssinaturaNexus';
+import Logo from '../components/Logo';
 import './demo.css';
 
 const LARGURA_LADO_A_LADO = '(min-width: 1280px)';
@@ -83,7 +84,7 @@ export default function DemoShell() {
       <div className={`demo demo-${visaoEfetiva}`}>
         <header className="demo-barra">
           <div className="demo-marca">
-            <strong>Nexus<span>Food</span></strong>
+            <Logo tom="escuro" tamanho={26} />
             <span className="demo-selo">demonstração</span>
             <AssinaturaNexus tom="escuro" prefixo="por" className="demo-assinatura" />
           </div>

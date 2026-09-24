@@ -1,5 +1,6 @@
 import AssinaturaNexus from './AssinaturaNexus';
 import Icone from './Icone';
+import Logo from './Logo';
 
 const RECURSOS = [
   { icone: 'sacola', titulo: 'Cardápio pelo link', texto: 'O cliente pede pelo celular, sem baixar aplicativo e sem taxa por pedido.' },
@@ -46,7 +47,7 @@ export default function AuthLayout({ children }) {
   return (
     <div className="auth-shell">
       <aside className="auth-apresentacao">
-        <div className="auth-marca">Nexus<span>Food</span></div>
+        <Logo tom="escuro" tamanho={34} className="auth-marca" />
 
         <div className="auth-chamada">
           <h2>Pedidos, vendas e a saúde do seu restaurante em um só lugar.</h2>
