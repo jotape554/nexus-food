@@ -2,6 +2,7 @@ import { criarEstadoInicial, VERSAO_DADOS } from './dadosIniciais';
 import { dinheiro, diaOperacional, ErroRegra } from './regras';
 import { criarPedido, mudarStatus, paraAcompanhamento, paraPainel, proximoId, USUARIO_DEMO } from './servico';
 import { gerarRelatorio } from './relatorio';
+import { gerarNexus } from './nexus';
 
 /**
  * "Backend" da demonstração: atende no navegador as mesmas rotas que o frontend chama, com os
@@ -300,6 +301,9 @@ const ROTAS = [
       throw e;
     }
   }],
+
+  // Nexus Score
+  ['GET', /^\/api\/nexus$/, () => gerarNexus(estado, agora())],
 
   // páginas do cliente final
   ['GET', /^\/public\/restaurantes\/([^/]+)$/, (m) => {

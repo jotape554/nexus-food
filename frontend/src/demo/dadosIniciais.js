@@ -1,6 +1,6 @@
 import { criarPedido, mudarStatus, proximoId } from './servico';
 
-export const VERSAO_DADOS = 2; // mude ao alterar os dados de exemplo: quem já abriu a demo recebe os novos
+export const VERSAO_DADOS = 3; // mude ao alterar os dados de exemplo: quem já abriu a demo recebe os novos
 export const SLUG_DEMO = 'cantina-da-nona';
 
 const CARDAPIO = {
@@ -158,7 +158,8 @@ export function criarEstadoInicial(agoraMs) {
       taxaEntregaFixa: 0,
       pedidoMinimo: 25,
       tempoPreparoEstimadoMin: 35,
-      criadoEm: new Date(agoraMs - 3 * 86400000).toISOString(),
+      // Restaurante (e cardápio) desde antes do histórico: o indicador de produtos parados precisa de 4 semanas.
+      criadoEm: new Date(agoraMs - 75 * 86400000).toISOString(),
     },
     bairros: [],
     categorias: [],

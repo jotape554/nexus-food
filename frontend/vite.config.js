@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
   server: {
+    // A demonstração importa a regra do Nexus direto do backend (uma fonte só).
+    fs: { allow: ['..'] },
     proxy: {
       '/api': 'http://localhost:8080',
       '/auth': 'http://localhost:8080',
