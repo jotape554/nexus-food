@@ -59,6 +59,15 @@ chega no painel na hora. A build normal (`npm run build`) não inclui nada disso
 Se mudar uma regra de pedido no backend, mude também em `src/demo/regras.js` e
 `src/demo/servico.js`.
 
+## Impressão do pedido
+
+No painel de pedidos, o botão **Impressora** configura a impressora *deste* computador (fica no
+navegador): papel térmico 80 mm, 58 mm ou folha A4; via da cozinha (sem preços), via completa
+(cliente, endereço, valores, troco) ou as duas; e impressão automática ao aceitar o pedido, assim
+que ele chega ou só no botão. Cada cartão tem o botão de imprimir. Funciona com qualquer impressora
+instalada no sistema; para sair sem a janela de impressão, abra o Chrome com `--kiosk-printing`.
+Código em `frontend/src/impressao/`.
+
 ## Rotas principais
 
 | Quem | Rota | O quê |

@@ -6,6 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 import RecursoBloqueado from '../components/RecursoBloqueado';
 import OpcoesDoItem from '../components/OpcoesDoItem';
+import ConfigImpressora from '../impressao/ConfigImpressora';
+import { imprimirPedido } from '../impressao/comanda';
+import { jaImpresso, lerConfig, marcarImpresso } from '../impressao/config';
 import Icone, { ICONE_MODALIDADE, ICONE_PAGAMENTO } from '../components/Icone';
 import {
   moeda, hora, telefone, numeroPedido, urgencia, minutosDesde,
@@ -56,7 +59,7 @@ function tocarAlerta(contexto) {
 const ROTULO_URGENCIA = { ok: 'No prazo', atencao: 'Atenção', atrasado: 'Atrasado' };
 const MAX_ITENS_CARTAO = 8;
 
-function CartaoPedido({ pedido, agora, onAvancar, onAbrir, ocupado }) {
+function CartaoPedido({ pedido, agora, onAvancar, onAbrir, onImprimir, ocupado }) {
   const acao = proximaAcao(pedido);
   const nivel = urgencia(pedido, agora);
   const referenciaTempo = pedido.status === 'SAIU_PARA_ENTREGA' && pedido.saiuParaEntregaEm ? pedido.saiuParaEntregaEm : pedido.criadoEm;
@@ -106,16 +109,21 @@ function CartaoPedido({ pedido, agora, onAvancar, onAbrir, ocupado }) {
           <div className="pedido-card-linha obs-geral"><Icone nome="nota" /> <span>{pedido.observacao}</span></div>
         )}
       </button>
-      {acao && (
-        <button className="btn btn-latao pedido-card-acao" disabled={ocupado} onClick={() => onAvancar(pedido, acao.status)}>
-          {acao.rotulo}
+      <div className="pedido-card-rodape">
+        <button type="button" className="btn btn-secundario btn-imprimir" onClick={() => onImprimir(pedido)} title="Imprimir pedido" aria-label={`Imprimir pedido ${numeroPedido(pedido.numeroDia)}`}>
+          <Icone nome="impressora" tamanho={18} />
         </button>
-      )}
+        {acao && (
+          <button className="btn btn-latao pedido-card-acao" disabled={ocupado} onClick={() => onAvancar(pedido, acao.status)}>
+            {acao.rotulo}
+          </button>
+        )}
+      </div>
     </article>
   );
 }
 
-function DetalhePedido({ id, onFechar, onAvancar, onCancelar }) {
+function DetalhePedido({ id, onFechar, onAvancar, onCancelar, onImprimir }) {
   const { data: pedido, isLoading } = useQuery({
     queryKey: ['pedido', id],
     queryFn: () => api.get(`/api/pedidos/${id}`),
@@ -184,6 +192,7 @@ function DetalhePedido({ id, onFechar, onAvancar, onCancelar }) {
       </ol>
 
       <div className="modal-acoes">
+        <button className="btn btn-secundario btn-icone" onClick={() => onImprimir(pedido)}><Icone nome="impressora" tamanho={16} /> Imprimir</button>
         {emAndamento && <button className="btn btn-perigo" onClick={() => onCancelar(pedido)}>Cancelar pedido</button>}
         {acao && <button className="btn btn-latao" onClick={() => onAvancar(pedido, acao.status)}>{acao.rotulo}</button>}
         {!acao && <button className="btn btn-secundario" onClick={onFechar}>Fechar</button>}
@@ -266,6 +275,7 @@ export default function Pedidos() {
   const [agora, setAgora] = useState(Date.now());
   const [somAtivo, setSomAtivo] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [configurandoImpressora, setConfigurandoImpressora] = useState(false);
   const audioRef = useRef(null);
   const novosVistosRef = useRef(null);
 
@@ -289,16 +299,35 @@ export default function Pedidos() {
 
   // Alerta sonoro + título da aba quando chega pedido novo.
   useEffect(() => {
+    // Enquanto a primeira lista não chega, não há "antes" para comparar: sem isso, os pedidos
+    // que já estavam na tela contariam como novos (bipe e impressão ao abrir o painel).
+    if (isLoading) return;
     const novos = pedidos.filter((p) => p.status === 'RECEBIDO');
     document.title = novos.length > 0 ? `(${novos.length}) Novos pedidos · Nexus Food` : 'Pedidos · Nexus Food';
     const ids = new Set(novos.map((p) => p.id));
-    if (novosVistosRef.current && [...ids].some((id) => !novosVistosRef.current.has(id)) && somAtivo) {
+    const chegaram = novosVistosRef.current ? novos.filter((p) => !novosVistosRef.current.has(p.id)) : [];
+    if (chegaram.length > 0 && somAtivo) {
       tocarAlerta(audioRef.current);
     }
+    // Impressão automática "assim que chega": só pedidos que apareceram com a tela aberta.
+    if (chegaram.length > 0 && lerConfig().automatico === 'chegar') {
+      chegaram.forEach((p) => imprimirAutomatico(p));
+    }
     novosVistosRef.current = ids;
-  }, [pedidos, somAtivo]);
+  }, [pedidos, somAtivo, isLoading]);
 
   useEffect(() => () => { document.title = 'Nexus Food'; }, []);
+
+  function imprimir(pedido) {
+    marcarImpresso(pedido.id);
+    imprimirPedido(pedido, restaurante, lerConfig());
+  }
+
+  /** Impressão sozinha: cada pedido sai uma vez só neste aparelho, mesmo recarregando a tela. */
+  function imprimirAutomatico(pedido) {
+    if (jaImpresso(pedido.id)) return;
+    imprimir(pedido);
+  }
 
   function atualizarListas() {
     queryClient.invalidateQueries({ queryKey: ['pedidos-em-andamento'] });
@@ -312,6 +341,7 @@ export default function Pedidos() {
       setErro('');
       queryClient.setQueryData(['pedido', pedido.id], pedido);
       atualizarListas();
+      if (pedido.status === 'CONFIRMADO' && lerConfig().automatico === 'aceitar') imprimirAutomatico(pedido);
     },
     onError: (e) => {
       setErro(e.message);
@@ -398,6 +428,9 @@ export default function Pedidos() {
           >
             <Icone nome={somAtivo ? 'som' : 'semSom'} tamanho={18} /> {somAtivo ? 'Som ligado' : 'Ligar som'}
           </button>
+          <button className="btn btn-secundario btn-icone" onClick={() => setConfigurandoImpressora(true)} title="Configurar a impressora deste computador">
+            <Icone nome="impressora" tamanho={18} /> Impressora
+          </button>
         </div>
       </div>
 
@@ -437,6 +470,7 @@ export default function Pedidos() {
                       agora={agora}
                       onAvancar={avancar}
                       onAbrir={setAbertoId}
+                      onImprimir={imprimir}
                       ocupado={mudarStatus.isPending}
                     />
                   ))}
@@ -455,6 +489,14 @@ export default function Pedidos() {
           onFechar={() => setAbertoId(null)}
           onAvancar={avancar}
           onCancelar={(p) => { setErro(''); setCancelando(p); }}
+          onImprimir={imprimir}
+        />
+      )}
+      {configurandoImpressora && (
+        <ConfigImpressora
+          pedido={pedidos[0]}
+          restaurante={restaurante}
+          onFechar={() => setConfigurandoImpressora(false)}
         />
       )}
       {cancelando && (

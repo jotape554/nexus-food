@@ -77,4 +77,7 @@ de `relatorios`.
 - Demonstração (`frontend/src/demo/`): espelha as regras do backend em JavaScript. Mudou regra de
   pedido, relatório, plano (`demo/planos.js`) ou equipe no backend → mude lá também e rode
   `npm run build:demo`.
+- Impressão (`frontend/src/impressao/`): comanda montada como HTML próprio e impressa por uma
+  moldura escondida; configuração por aparelho no `localStorage`. Todo texto vindo do cliente
+  passa por `esc` antes de entrar na comanda.
 - Antes de subir: `cd backend && ./gradlew test` e `cd frontend && npm run build`.
