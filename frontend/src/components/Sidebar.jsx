@@ -7,6 +7,7 @@ const ITENS = [
   { to: '/painel/cardapio', label: 'Cardápio', icone: '☰' },
   { to: '/painel/clientes', label: 'Clientes', icone: '◍' },
   { to: '/painel/relatorios', label: 'Relatórios', icone: '▥', gestao: true },
+  { to: '/painel/nexus', label: 'Nexus Score', icone: '✦', gestao: true },
   { to: '/painel/configuracoes', label: 'Configurações', icone: '⚙', gestao: true },
   { to: '/painel/assinatura', label: 'Assinatura', icone: '◆', gestao: true },
 ];

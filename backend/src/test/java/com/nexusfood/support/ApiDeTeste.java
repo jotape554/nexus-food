@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -27,7 +28,7 @@ public class ApiDeTeste {
     }
 
     public JsonNode json(ResultActions r) throws Exception {
-        return objectMapper.readTree(r.andReturn().getResponse().getContentAsString());
+        return objectMapper.readTree(r.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
     }
 
     public Sessao registrar(String email) throws Exception {

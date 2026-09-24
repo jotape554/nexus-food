@@ -227,7 +227,7 @@ Um indicador que não atinge o mínimo fica **"sem dados suficientes"** e o peso
 | O2, O3 | ≥ 30 pedidos com o timestamp **e** cobertura ≥ 60% (pedidos com o timestamp ÷ concluídos) — se a equipe pula "Pronto" no painel, o indicador não inventa número |
 | K1 | ≥ 5 produtos ativos há ≥ 28 dias |
 
-Uma área só aparece se ≥ 50% do peso dela tiver indicadores válidos.
+Uma área só aparece se ≥ 50% do peso dela tiver indicadores válidos. O "peso total válido" da tabela abaixo é a soma dos pesos das **áreas que aparecem** (decisão tomada na implementação para manter a nota provisória aos 28 dias, como aprovado: Clientes + Operação + Cardápio = 65%).
 
 ### 5.6 Histórico mínimo para exibir a nota
 

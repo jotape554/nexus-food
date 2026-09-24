@@ -68,6 +68,7 @@ Se mudar uma regra de pedido no backend, mude também em `src/demo/regras.js` e
 | Restaurante | `/painel/pedidos` | Painel de pedidos (atualiza sozinho) |
 | Restaurante | `/painel/cardapio` | Categorias e produtos |
 | Restaurante | `/painel/relatorios` | Vendas por dia, semana e mês, com comparação e planilha |
+| Restaurante | `/painel/nexus` | Nexus Score: nota, áreas, indicadores, evolução e insights |
 | Restaurante | `/painel/configuracoes` | Modalidades, taxa de entrega, bairros, horários |
 
 ## Fases
@@ -75,5 +76,5 @@ Se mudar uma regra de pedido no backend, mude também em `src/demo/regras.js` e
 1. ✅ Plano de arquitetura
 2. ✅ Domínio do restaurante: cardápio, pedidos, clientes, painel
 3. ✅ Relatórios de vendas por dia, semana e mês
-4. Nexus Analytics: snapshots, indicadores, Nexus Score, insights
+4. ✅ Nexus Analytics: snapshots, indicadores, Nexus Score, insights
 5. Controle de acesso por plano

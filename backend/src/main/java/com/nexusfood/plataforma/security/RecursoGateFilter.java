@@ -38,7 +38,8 @@ public class RecursoGateFilter extends OncePerRequestFilter {
             "/api/produtos", Recurso.CARDAPIO,
             "/api/pedidos", Recurso.PEDIDOS,
             "/api/clientes", Recurso.CLIENTES,
-            "/api/relatorios", Recurso.RELATORIOS
+            "/api/relatorios", Recurso.RELATORIOS,
+            "/api/nexus", Recurso.NEXUS
     );
 
     private final RestauranteRepository restauranteRepository;

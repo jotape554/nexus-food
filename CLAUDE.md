@@ -19,7 +19,8 @@ Dependências só de cima para baixo:
 plataforma → catalogo → clientes → pedidos → relatorios → analytics
 ```
 
-`relatorios` e `analytics` só LEEM pedidos; nunca escrevem.
+`relatorios` e `analytics` só LEEM pedidos; nunca escrevem. `analytics` reutiliza o `MetricasCalculator`
+de `relatorios`.
 
 ## Regras que não podem ser quebradas
 
@@ -44,7 +45,12 @@ plataforma → catalogo → clientes → pedidos → relatorios → analytics
    `upgradeNecessario`). O frontend só esconde/mostra.
 10. **Métricas num lugar só:** `relatorios/service/MetricasCalculator` (venda = CONCLUIDO, dia =
     `diaOperacional`, ticket = faturamento ÷ concluídos, cancelamento = cancelados ÷ recebidos).
-    Relatórios e, na Fase 4, os snapshots do Nexus usam essa mesma classe.
+    Relatórios e os resumos diários do Nexus usam essa mesma classe.
+11. **Nexus Score:** a regra é o arquivo `backend/src/main/resources/analytics/regras/nexus-score-vN.json`.
+    Versão publicada é imutável (`RegraScoreImutavelTest` confere o hash): mudou peso, âncora, mínimo
+    ou fórmula → crie a próxima versão. O motor (`NexusScoreEngine`) é puro; as medidas saem do
+    `ColetorIndicadores`; insights são modelos de texto em `InsightService.CATALOGO` (mudou texto ou
+    condição → suba a versão do modelo). Dia de referência = último dia operacional fechado.
     Regras do Nexus Score publicadas são imutáveis: mudou peso/âncora → nova versão.
 
 ## Convenções

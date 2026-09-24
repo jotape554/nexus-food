@@ -81,7 +81,7 @@ export default function Registro() {
           Já tem conta? <Link to="/login">Entrar</Link>
         </div>
       </div>
-      <AssinaturaNexus />
+      <AssinaturaNexus tom="escuro" />
     </div>
   );
 }

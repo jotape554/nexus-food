@@ -23,7 +23,8 @@ class MetricasCalculatorTest {
 
     private static PedidoResumo pedido(long cliente, StatusPedido status, CanceladoPor por, ModalidadePedido mod,
                                        String total, String criadoEmUtc, LocalDate dia) {
-        return new PedidoResumo(cliente, dia, Instant.parse(criadoEmUtc), status, por, mod, FormaPagamento.PIX, new BigDecimal(total));
+        return new PedidoResumo(cliente, dia, Instant.parse(criadoEmUtc), status, por, mod, FormaPagamento.PIX, new BigDecimal(total),
+                null, null, null, null);
     }
 
     private final List<PedidoResumo> pedidos = List.of(

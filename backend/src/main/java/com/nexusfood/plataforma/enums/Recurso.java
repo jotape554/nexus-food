@@ -15,7 +15,9 @@ public enum Recurso {
     PEDIDOS(PlanoSaas.BASICO),
     CLIENTES(PlanoSaas.BASICO),
     // Na Fase 5 o Básico fica limitado ao histórico recente; por enquanto todos os planos acessam.
-    RELATORIOS(PlanoSaas.BASICO);
+    RELATORIOS(PlanoSaas.BASICO),
+    // Na Fase 5: nota a partir do Profissional; indicadores detalhados e insights no Premium.
+    NEXUS(PlanoSaas.BASICO);
 
     private final PlanoSaas planoMinimo;
 

@@ -1,0 +1,102 @@
+{
+  "versao": "v1",
+  "publicadaEm": "2026-09-24",
+  "observacao": "Versão publicada é IMUTÁVEL. Mudou peso, âncora, mínimo ou fórmula: crie nexus-score-v2.json. As âncoras são hipóteses iniciais, a recalibrar com dados reais.",
+  "janelaDias": 28,
+  "historico": {
+    "diasMinimosNota": 28,
+    "diasNotaOficial": 56,
+    "pedidosConcluidosMinimos": 60,
+    "pesoValidoMinimo": 0.6,
+    "pesoValidoMinimoArea": 0.5
+  },
+  "faixas": [
+    { "codigo": "CRITICO", "nome": "Crítico", "de": 0, "ate": 39 },
+    { "codigo": "ATENCAO", "nome": "Atenção", "de": 40, "ate": 59 },
+    { "codigo": "BOM", "nome": "Bom", "de": 60, "ate": 74 },
+    { "codigo": "MUITO_BOM", "nome": "Muito bom", "de": 75, "ate": 89 },
+    { "codigo": "EXCELENTE", "nome": "Excelente", "de": 90, "ate": 100 }
+  ],
+  "areas": [
+    {
+      "codigo": "VENDAS", "nome": "Vendas", "peso": 0.35,
+      "indicadores": [
+        {
+          "codigo": "V1_CRESCIMENTO_FATURAMENTO", "nome": "Crescimento do faturamento", "peso": 0.5, "unidade": "PERCENTUAL",
+          "descricao": "Faturamento das últimas 4 semanas comparado com as 4 anteriores.",
+          "ancoras": { "zero": -25, "referencia": 0, "cem": 15 },
+          "minimos": { "diasHistorico": 56, "amostra": 30 }
+        },
+        {
+          "codigo": "V2_EVOLUCAO_TICKET", "nome": "Evolução do ticket médio", "peso": 0.25, "unidade": "PERCENTUAL",
+          "descricao": "Ticket médio das últimas 4 semanas comparado com as 4 anteriores.",
+          "ancoras": { "zero": -15, "referencia": 0, "cem": 10 },
+          "minimos": { "diasHistorico": 56, "amostra": 30 }
+        },
+        {
+          "codigo": "V3_REGULARIDADE", "nome": "Regularidade semanal", "peso": 0.25, "unidade": "COEFICIENTE",
+          "descricao": "Quanto o faturamento varia de uma semana para outra (desvio ÷ média das 4 semanas). Menor é melhor.",
+          "ancoras": { "zero": 0.5, "referencia": 0.25, "cem": 0.1 },
+          "minimos": { "diasHistorico": 28, "amostra": 30 }
+        }
+      ]
+    },
+    {
+      "codigo": "CLIENTES", "nome": "Clientes", "peso": 0.30,
+      "indicadores": [
+        {
+          "codigo": "C1_RECOMPRA", "nome": "Taxa de recompra", "peso": 0.5, "unidade": "PERCENTUAL",
+          "descricao": "Clientes das últimas 4 semanas que já tinham comprado antes.",
+          "ancoras": { "zero": 10, "referencia": 30, "cem": 50 },
+          "minimos": { "amostra": 30 }
+        },
+        {
+          "codigo": "C2_RETENCAO_NOVOS", "nome": "Retenção de novos clientes", "peso": 0.3, "unidade": "PERCENTUAL",
+          "descricao": "Clientes que compraram pela primeira vez nas 4 semanas anteriores e voltaram em até 28 dias.",
+          "ancoras": { "zero": 5, "referencia": 20, "cem": 35 },
+          "minimos": { "diasHistorico": 56, "amostra": 15 }
+        },
+        {
+          "codigo": "C3_BASE_ATIVA", "nome": "Crescimento da base de clientes", "peso": 0.2, "unidade": "PERCENTUAL",
+          "descricao": "Clientes diferentes nas últimas 4 semanas comparado com as 4 anteriores.",
+          "ancoras": { "zero": -30, "referencia": 0, "cem": 20 },
+          "minimos": { "diasHistorico": 56, "amostra": 30 }
+        }
+      ]
+    },
+    {
+      "codigo": "OPERACAO", "nome": "Operação", "peso": 0.25,
+      "indicadores": [
+        {
+          "codigo": "O1_CANCELAMENTO_RESTAURANTE", "nome": "Cancelamento pelo restaurante", "peso": 0.45, "unidade": "PERCENTUAL",
+          "descricao": "Pedidos cancelados ou recusados pelo restaurante nas últimas 4 semanas. Menor é melhor.",
+          "ancoras": { "zero": 12, "referencia": 5, "cem": 2 },
+          "minimos": { "amostra": 30 }
+        },
+        {
+          "codigo": "O2_TEMPO_ACEITE", "nome": "Tempo para aceitar o pedido", "peso": 0.3, "unidade": "MINUTOS",
+          "descricao": "Metade dos pedidos é aceita em até este tempo (mediana). Menor é melhor.",
+          "ancoras": { "zero": 15, "referencia": 5, "cem": 2 },
+          "minimos": { "amostra": 30, "cobertura": 0.6 }
+        },
+        {
+          "codigo": "O3_PONTUALIDADE", "nome": "Pontualidade", "peso": 0.25, "unidade": "PERCENTUAL",
+          "descricao": "Pedidos que ficaram prontos dentro do tempo prometido ao cliente.",
+          "ancoras": { "zero": 60, "referencia": 85, "cem": 95 },
+          "minimos": { "amostra": 30, "cobertura": 0.6 }
+        }
+      ]
+    },
+    {
+      "codigo": "CARDAPIO", "nome": "Cardápio", "peso": 0.10,
+      "indicadores": [
+        {
+          "codigo": "K1_PRODUTOS_PARADOS", "nome": "Produtos parados", "peso": 1.0, "unidade": "PERCENTUAL",
+          "descricao": "Produtos no cardápio há pelo menos 4 semanas que não venderam nada nesse período. Menor é melhor.",
+          "ancoras": { "zero": 60, "referencia": 30, "cem": 10 },
+          "minimos": { "amostra": 5 }
+        }
+      ]
+    }
+  ]
+}

@@ -16,7 +16,8 @@ public interface RelatorioRepository extends Repository<Pedido, Long> {
 
     @Query("""
             SELECT new com.nexusfood.relatorios.model.PedidoResumo(
-                p.cliente.id, p.diaOperacional, p.criadoEm, p.status, p.canceladoPor, p.modalidade, p.formaPagamento, p.total)
+                p.cliente.id, p.diaOperacional, p.criadoEm, p.status, p.canceladoPor, p.modalidade, p.formaPagamento, p.total,
+                p.motivoCancelamento, p.confirmadoEm, p.prontoEm, p.prontoPrevistoPara)
             FROM Pedido p
             WHERE p.restaurante.id = :restauranteId AND p.diaOperacional BETWEEN :inicio AND :fim
             """)

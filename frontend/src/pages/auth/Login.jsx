@@ -29,7 +29,7 @@ export default function Login() {
     <div className="auth-shell">
       <div className="auth-card">
         <h1>Entrar</h1>
-        <p className="sub">Acesse o painel da suo restaurante.</p>
+        <p className="sub">Acesse o painel do seu restaurante.</p>
 
         {erro && <div className="erro">{erro}</div>}
 
@@ -54,7 +54,7 @@ export default function Login() {
           Ainda não tem conta? <Link to="/registro">Criar restaurante</Link>
         </div>
       </div>
-      <AssinaturaNexus />
+      <AssinaturaNexus tom="escuro" />
     </div>
   );
 }

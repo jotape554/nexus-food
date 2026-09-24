@@ -1003,3 +1003,109 @@ label {
 .auth-shell { flex-direction: column; gap: 20px; }
 .sidebar-assinatura { justify-content: flex-start; padding: 12px 10px 0; }
 .rodape-publico { display: flex; justify-content: center; padding: 16px 0 8px; }
+
+/* ---------- Nexus ---------- */
+
+:root {
+  /* Faixas da nota (cores de estado: sempre acompanhadas do nome da faixa). */
+  --faixa-critico: #C0392B;
+  --faixa-atencao: #D99A00;
+  --faixa-bom: #7A9A3A;
+  --faixa-muito_bom: #2E8B57;
+  --faixa-excelente: #1F6B3C;
+}
+
+.nexus { display: flex; flex-direction: column; gap: 20px; }
+.nexus .suave { color: var(--texto-suave); font-size: 0.86rem; }
+.rotulo-secao { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--texto-suave); }
+
+.nexus-topo { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+.nexus-nota { padding: 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 22px; }
+.nota-linha { display: flex; align-items: center; gap: 18px; margin-top: 6px; }
+.nota-numero { font-family: var(--fonte-corpo); font-size: 4.5rem; font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+.nota-lado { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.faixa-selo { font-weight: 700; font-size: 0.95rem; padding: 5px 12px; border-radius: var(--radius-full); color: var(--branco); }
+.faixa-selo.faixa-critico { background: var(--faixa-critico); }
+.faixa-selo.faixa-atencao { background: var(--faixa-atencao); color: var(--tinta); }
+.faixa-selo.faixa-bom { background: var(--faixa-bom); }
+.faixa-selo.faixa-muito_bom { background: var(--faixa-muito_bom); }
+.faixa-selo.faixa-excelente { background: var(--faixa-excelente); }
+.nota-variacao { font-size: 0.85rem; font-weight: 600; color: var(--texto-suave); }
+.nota-variacao.positiva { color: #1F6B3C; }
+.nota-variacao.negativa { color: var(--vermelho-couro); }
+.selo-provisoria { display: flex; gap: 8px; align-items: flex-start; margin: 14px 0 0; padding: 10px 12px; background: var(--latao-suave); border-radius: var(--radius-sm); font-size: 0.86rem; }
+.selo-provisoria .icone { margin-top: 2px; flex-shrink: 0; }
+
+.escala-trilho { position: relative; display: flex; gap: 2px; height: 10px; }
+.escala-seg { border-radius: 2px; opacity: 0.35; }
+.escala-seg.atual { opacity: 1; }
+.escala-seg.faixa-critico { background: var(--faixa-critico); }
+.escala-seg.faixa-atencao { background: var(--faixa-atencao); }
+.escala-seg.faixa-bom { background: var(--faixa-bom); }
+.escala-seg.faixa-muito_bom { background: var(--faixa-muito_bom); }
+.escala-seg.faixa-excelente { background: var(--faixa-excelente); }
+.escala-marcador {
+  position: absolute; top: -5px; width: 4px; height: 20px; margin-left: -2px;
+  background: var(--tinta); border-radius: 2px; box-shadow: 0 0 0 2px var(--branco);
+}
+.escala-rotulos { display: flex; gap: 2px; margin-top: 6px; font-size: 0.72rem; color: var(--texto-suave); }
+.escala-rotulos span { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.nexus-nota.coletando { justify-content: flex-start; }
+.coletando-titulo { font-family: var(--fonte-corpo); font-size: 1.8rem; font-weight: 700; margin: 6px 0 4px; }
+.progresso-coleta { display: flex; flex-direction: column; gap: 14px; }
+.progresso-texto { display: flex; justify-content: space-between; gap: 12px; font-size: 0.86rem; margin-bottom: 6px; }
+
+.nexus-insights { padding: 22px 24px; }
+.nexus-insights h3 { margin: 0 0 12px; font-size: 1.15rem; }
+.nexus-insights ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.insight { border: 1px solid var(--borda); border-radius: var(--radius); padding: 10px 14px; }
+.insight p { margin: 6px 0 0; font-size: 0.92rem; line-height: 1.45; }
+.insight-selo { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.insight-alerta { border-left: 4px solid var(--faixa-critico); }
+.insight-alerta .insight-selo { color: var(--faixa-critico); }
+.insight-oportunidade { border-left: 4px solid var(--faixa-atencao); }
+.insight-oportunidade .insight-selo { color: #8A6100; }
+.insight-conquista { border-left: 4px solid var(--faixa-muito_bom); }
+.insight-conquista .insight-selo { color: #1F6B3C; }
+
+.nexus-areas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.nexus-area { padding: 20px 22px; }
+.nexus-area.apagada { background: var(--papel); }
+.nexus-area-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.nexus-area-topo h3 { margin: 0; font-size: 1.2rem; }
+.nexus-area-nota { font-size: 2rem; font-weight: 700; line-height: 1; }
+.nexus-area-nota small { font-size: 0.85rem; color: var(--texto-suave); font-weight: 600; margin-left: 2px; }
+.nexus-indicadores { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.nexus-indicadores li { padding: 10px 0; border-top: 1px solid var(--borda); }
+.ind-linha { display: flex; justify-content: space-between; gap: 12px; font-size: 0.92rem; }
+.ind-nome { font-weight: 600; cursor: help; }
+.ind-valor { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.ind-pontos { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.ind-pontos .medidor { flex: 1; }
+.ind-pontos-numero { font-size: 0.78rem; color: var(--texto-suave); font-variant-numeric: tabular-nums; min-width: 48px; text-align: right; }
+.sem-dados .ind-nome, .sem-dados .ind-valor { color: var(--texto-suave); }
+.ind-motivo { margin: 4px 0 0; font-size: 0.8rem; color: var(--texto-suave); }
+
+.grafico-linha { fill: none; stroke: var(--latao); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.grafico-area { fill: var(--latao); opacity: 0.1; }
+.grafico-ponto { fill: var(--latao); stroke: var(--branco); stroke-width: 2; }
+.grafico-mira { stroke: var(--borda-forte); stroke-width: 1; }
+.grafico:focus { outline: none; }
+.grafico:focus-visible { box-shadow: 0 0 0 3px rgba(217, 98, 43, 0.25); border-radius: var(--radius-sm); }
+
+.nexus-metodo { padding: 0; }
+.nexus-metodo summary { cursor: pointer; padding: 14px 20px; font-weight: 600; }
+.nexus-metodo-corpo { padding: 0 20px 18px; }
+.nexus-metodo-corpo p { max-width: 70ch; line-height: 1.55; font-size: 0.92rem; }
+.nexus-metodo-corpo table { width: 100%; font-size: 0.86rem; }
+
+@media (max-width: 1000px) {
+  .nexus-topo, .nexus-areas { grid-template-columns: 1fr; }
+  .nota-numero { font-size: 3.6rem; }
+}
+.resumo-areas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; }
+.resumo-areas li { display: flex; justify-content: space-between; gap: 8px; font-size: 0.9rem; padding: 6px 0; border-bottom: 1px solid var(--borda); }
+.resumo-areas-nota { font-weight: 700; font-variant-numeric: tabular-nums; }
+.nota-rodape { margin: 0; font-size: 0.8rem !important; }
+.nexus-nota { justify-content: flex-start; }

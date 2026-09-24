@@ -79,7 +79,7 @@ export default function RedefinirSenha() {
           <Link to="/login">Voltar para o login</Link>
         </div>
       </div>
-      <AssinaturaNexus />
+      <AssinaturaNexus tom="escuro" />
     </div>
   );
 }
