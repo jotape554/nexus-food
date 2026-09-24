@@ -4,6 +4,7 @@ import { api } from '../api/http';
 import { moeda, MODALIDADE_LABEL, PAGAMENTO_LABEL } from '../api/formato';
 import GraficoColunas from '../components/graficos/GraficoColunas';
 import RecursoBloqueado from '../components/RecursoBloqueado';
+import { salvarArquivo } from '../api/arquivo';
 
 // ---------- datas (sempre em AAAA-MM-DD, sem fuso: são dias operacionais) ----------
 
@@ -123,7 +124,7 @@ function ListaParticipacao({ titulo, itens, rotulos }) {
   );
 }
 
-function baixarCsv(relatorio) {
+function montarCsv(relatorio) {
   const linhas = [['Início', 'Fim', 'Faturamento (R$)', 'Pedidos concluídos', 'Ticket médio (R$)', 'Cancelados']];
   const numero = (v) => Number(v).toFixed(2).replace('.', ',');
   relatorio.serie.forEach((p) => linhas.push([dataCompleta(p.inicio), dataCompleta(p.fim), numero(p.faturamento), p.pedidosConcluidos, numero(p.ticketMedio), p.cancelados]));
@@ -148,6 +149,7 @@ export default function Relatorios() {
   parametros.set('agrupamento', filtro.agrupamento);
 
   const [erroPeriodo, setErroPeriodo] = useState('');
+  const [erroArquivo, setErroArquivo] = useState('');
   const [hoje, setHoje] = useState(null);
   const ultimoRelatorio = useRef(null);
 
@@ -164,6 +166,15 @@ export default function Relatorios() {
   useEffect(() => {
     if (data?.hoje) setHoje(data.hoje);
   }, [data?.hoje]);
+
+  async function baixarPlanilha() {
+    setErroArquivo('');
+    try {
+      await salvarArquivo(`vendas-${r.inicio}-a-${r.fim}.csv`, montarCsv(r));
+    } catch (e) {
+      setErroArquivo(e.message);
+    }
+  }
 
   function aplicarPreset(p) {
     if (!hoje) return;
@@ -240,7 +251,7 @@ export default function Relatorios() {
           <p>{r ? `Vendas de ${periodoTexto(r.inicio, r.fim)}. Só pedidos concluídos contam como venda.` : 'Vendas do seu restaurante.'}</p>
         </div>
         {r && !semVendas && (
-          <button type="button" className="btn btn-secundario" onClick={() => baixarCsv(r)}>Baixar planilha (CSV)</button>
+          <button type="button" className="btn btn-secundario" onClick={baixarPlanilha}>Baixar planilha (CSV)</button>
         )}
       </div>
 
@@ -271,6 +282,9 @@ export default function Relatorios() {
 
       {(erroPeriodo || (error && error.status !== 402)) && (
         <div className="erro" role="alert">{erroPeriodo || error.message}</div>
+      )}
+      {erroArquivo && (
+        <div className="erro" role="alert">{erroArquivo}</div>
       )}
       {isLoading && <p>Carregando...</p>}
 
