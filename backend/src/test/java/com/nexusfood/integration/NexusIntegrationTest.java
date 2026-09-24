@@ -6,6 +6,7 @@ import com.nexusfood.analytics.repository.NexusInsightRepository;
 import com.nexusfood.analytics.repository.NexusScoreRepository;
 import com.nexusfood.analytics.repository.SnapshotDiarioRepository;
 import com.nexusfood.analytics.service.NexusJob;
+import com.nexusfood.plataforma.enums.PlanoSaas;
 import com.nexusfood.plataforma.enums.StatusAssinaturaSaas;
 import com.nexusfood.plataforma.repository.RestauranteRepository;
 import com.nexusfood.plataforma.repository.UsuarioRepository;
@@ -124,6 +125,7 @@ class NexusIntegrationTest {
         var restaurante = restauranteRepository.findById(
                 usuarioRepository.findByEmail(email).orElseThrow().getRestaurante().getId()).orElseThrow();
         restaurante.setStatusAssinaturaSaas(StatusAssinaturaSaas.ATIVA);
+        restaurante.setPlanoSaas(PlanoSaas.PREMIUM);
         restauranteRepository.save(restaurante);
     }
 

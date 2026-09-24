@@ -1,5 +1,7 @@
 package com.nexusfood.clientes.controller;
 
+import com.nexusfood.plataforma.acesso.RequerRecurso;
+import com.nexusfood.plataforma.enums.Recurso;
 import com.nexusfood.clientes.model.Cliente;
 import com.nexusfood.clientes.service.ClienteService;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequerRecurso(Recurso.CLIENTES)
 @RequestMapping("/api/clientes")
 @RequiredArgsConstructor
 public class ClienteController {

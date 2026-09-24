@@ -1,5 +1,5 @@
-import { createContext, useContext, useState } from 'react';
-import { api, getToken, setToken } from '../api/http';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { api, getToken, setToken, EVENTO_SESSAO_ENCERRADA } from '../api/http';
 import { DEMO } from '../demo/modo';
 
 const CHAVE_USUARIO = 'nexusfood_usuario';
@@ -27,6 +27,18 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(() => (DEMO ? USUARIO_DEMO : lerUsuarioSalvo()));
+  // Recado para a tela de login quando a sessão cai sozinha (ex.: acesso desativado).
+  const [aviso, setAviso] = useState('');
+
+  useEffect(() => {
+    function encerrar(e) {
+      gravarUsuario(null);
+      setUsuario(null);
+      setAviso(e.detail || 'Sua sessão terminou. Entre de novo.');
+    }
+    window.addEventListener(EVENTO_SESSAO_ENCERRADA, encerrar);
+    return () => window.removeEventListener(EVENTO_SESSAO_ENCERRADA, encerrar);
+  }, []);
 
   function salvarSessao(resposta) {
     setToken(resposta.token);
@@ -41,6 +53,7 @@ export function AuthProvider({ children }) {
   }
 
   async function login(email, senha) {
+    setAviso('');
     const resposta = await api.post('/auth/login', { email, senha }, { autenticado: false });
     salvarSessao(resposta);
   }
@@ -59,7 +72,7 @@ export function AuthProvider({ children }) {
   const autenticado = DEMO ? !!usuario : !!getToken() && !!usuario;
 
   return (
-    <AuthContext.Provider value={{ usuario, autenticado, login, registrar, sair }}>
+    <AuthContext.Provider value={{ usuario, autenticado, login, registrar, sair, aviso }}>
       {children}
     </AuthContext.Provider>
   );

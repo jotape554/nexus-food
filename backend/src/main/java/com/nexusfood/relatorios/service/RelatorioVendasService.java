@@ -1,6 +1,10 @@
 package com.nexusfood.relatorios.service;
 
 import com.nexusfood.pedidos.enums.StatusPedido;
+import com.nexusfood.plataforma.acesso.AcessoPlanoService;
+import com.nexusfood.plataforma.acesso.PlanoInsuficienteException;
+import com.nexusfood.plataforma.enums.PlanoSaas;
+import com.nexusfood.plataforma.enums.Recurso;
 import com.nexusfood.plataforma.exception.RecursoNaoEncontradoException;
 import com.nexusfood.plataforma.exception.RegraDeNegocioException;
 import com.nexusfood.plataforma.model.Restaurante;
@@ -26,6 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +54,9 @@ public class RelatorioVendasService {
     private final RestauranteRepository restauranteRepository;
     private final RelogioRestaurante relogio;
     private final MetricasCalculator calculadora;
+    private final AcessoPlanoService acessoPlano;
+
+    private static final DateTimeFormatter DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Transactional(readOnly = true)
     public RelatorioVendasResponse gerar(LocalDate inicioPedido, LocalDate fimPedido, Agrupamento agrupamentoPedido) {
@@ -68,6 +76,18 @@ public class RelatorioVendasService {
             throw new RegraDeNegocioException("Escolha um período de até 1 ano.");
         }
 
+        // O histórico que cada plano lê. A comparação com o período anterior continua valendo
+        // (é um número de referência, não uma consulta ao histórico).
+        PlanoSaas plano = acessoPlano.planoEfetivo(restaurante);
+        LocalDate primeiroDiaPermitido = plano == null ? hoje : plano.primeiroDiaDoHistorico(hoje);
+        if (primeiroDiaPermitido != null && inicio.isBefore(primeiroDiaPermitido)) {
+            PlanoSaas necessario = PlanoSaas.menorPlanoComHistoricoDesde(inicio, hoje);
+            throw new PlanoInsuficienteException(Recurso.RELATORIOS.name(), necessario,
+                    "Seu plano mostra relatórios a partir de %s. Períodos mais antigos fazem parte do plano %s."
+                            .formatted(DATA.format(primeiroDiaPermitido), AcessoPlanoService.nome(necessario)),
+                    Map.of("primeiroDiaPermitido", primeiroDiaPermitido.toString()));
+        }
+
         List<PedidoResumo> pedidos = relatorioRepository.pedidosDoPeriodo(restauranteId, inicio, fim);
         List<ProdutoVendido> produtos = relatorioRepository.produtosVendidos(restauranteId, inicio, fim, StatusPedido.CONCLUIDO);
         long clientesNovos = relatorioRepository.clientesNovos(restauranteId, inicio, fim, StatusPedido.CONCLUIDO);
@@ -81,7 +101,7 @@ public class RelatorioVendasService {
                 totais.clientesUnicos(), clientesNovos, Math.max(0, totais.clientesUnicos() - clientesNovos));
 
         return new RelatorioVendasResponse(
-                hoje, inicio, fim, agrupamento, resumo,
+                hoje, primeiroDiaPermitido, inicio, fim, agrupamento, resumo,
                 comparar(restauranteId, inicio, fim, totais),
                 serie(pedidos, inicio, fim, agrupamento),
                 fatias(calculadora.porChave(pedidos, p -> p.modalidade().name()), totais.faturamento()),

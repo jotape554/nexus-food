@@ -52,8 +52,29 @@
 .demo-visoes button:hover { color: var(--papel); }
 .demo-visoes button[aria-pressed="true"] { background: var(--latao); color: var(--tinta); }
 
-.demo-reiniciar {
+.demo-planos {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   margin-left: auto;
+  padding: 3px 3px 3px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(239, 235, 226, 0.18);
+}
+.demo-planos span { font-size: 0.75rem; color: rgba(239, 235, 226, 0.55); margin-right: 6px; }
+.demo-planos button {
+  border: none;
+  background: none;
+  color: rgba(239, 235, 226, 0.75);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 5px 11px;
+  border-radius: var(--radius-full);
+}
+.demo-planos button:hover { color: var(--papel); }
+.demo-planos button[aria-pressed="true"] { background: var(--papel); color: var(--tinta); }
+
+.demo-reiniciar {
   border: 1px solid rgba(239, 235, 226, 0.25);
   background: none;
   color: rgba(239, 235, 226, 0.8);
@@ -122,6 +143,7 @@
 
 @media (max-width: 560px) {
   .demo-reiniciar { margin-left: 0; }
+  .demo-planos { margin-left: 0; }
   .demo-dica { display: none; }
   .demo-lado-cliente { padding: 0; }
   .demo-celular {

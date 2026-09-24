@@ -1,5 +1,6 @@
 package com.nexusfood.plataforma.controller;
 
+import com.nexusfood.plataforma.acesso.AcessoLivre;
 import com.nexusfood.plataforma.dto.BairroEntregaRequest;
 import com.nexusfood.plataforma.dto.ConfiguracaoRestauranteRequest;
 import com.nexusfood.plataforma.dto.ConfiguracaoRestauranteResponse;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@AcessoLivre("Configurações da loja (abrir, fechar, entrega) valem em qualquer plano.")
 @RequestMapping("/api/restaurante")
 @RequiredArgsConstructor
 public class RestauranteController {

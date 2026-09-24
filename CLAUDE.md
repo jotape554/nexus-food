@@ -17,6 +17,7 @@ Dependências só de cima para baixo:
 
 ```
 plataforma → catalogo → clientes → pedidos → relatorios → analytics
+plataforma → equipe
 ```
 
 `relatorios` e `analytics` só LEEM pedidos; nunca escrevem. `analytics` reutiliza o `MetricasCalculator`
@@ -41,8 +42,16 @@ de `relatorios`.
    (modo PostgreSQL, usado nos testes) — nada de `ON CONFLICT`, JSONB etc.
 8. **Nenhum endpoint público devolve dado do cliente** (telefone, endereço, histórico).
    Acompanhamento só pelo `codigoPublico` (UUID).
-9. **Acesso por plano decidido no backend** (`Recurso` + `RecursoGateFilter`, resposta 402 com
-   `upgradeNecessario`). O frontend só esconde/mostra.
+9. **Acesso por plano decidido no backend.** Toda rota de `/api/**` declara `@RequerRecurso(Recurso.X)`
+   ou `@AcessoLivre("motivo")` (o `RecursoAnotacaoTest` quebra o build se faltar). Quem responde "o que
+   este restaurante pode usar" é só o `AcessoPlanoService` (teste grátis = Premium). Limites de
+   quantidade (usuários, histórico de relatório) ficam no `PlanoSaas` e são checados no service,
+   com `PlanoInsuficienteException` (402 + `upgradeNecessario` + `planoNecessario`). Downgrade nunca
+   apaga dado, só muda o que se lê. O frontend só esconde/mostra (`usePlano`, `RecursoBloqueado`).
+12. **Equipe:** senha só quem cria é a própria pessoa (link de convite de 72 h); o restaurante sempre
+   tem um administrador ativo; ninguém desativa ou muda o próprio perfil; desativar corta o acesso
+   na hora (o `JwtAuthFilter` recusa token de usuário inativo). Toda chamada à Stripe passa pelo
+   `StripeGateway`; trocar de plano de quem já assina muda o preço da assinatura existente.
 10. **Métricas num lugar só:** `relatorios/service/MetricasCalculator` (venda = CONCLUIDO, dia =
     `diaOperacional`, ticket = faturamento ÷ concluídos, cancelamento = cancelados ÷ recebidos).
     Relatórios e os resumos diários do Nexus usam essa mesma classe.
@@ -63,5 +72,6 @@ de `relatorios`.
 - Consultas JPQL novas: testar também no PostgreSQL (o H2 aceita coisas que o Postgres recusa,
   ex.: `:param IS NULL OR LOWER(:param)`).
 - Demonstração (`frontend/src/demo/`): espelha as regras do backend em JavaScript. Mudou regra de
-  pedido ou de relatório no backend → mude lá também e rode `npm run build:demo`.
+  pedido, relatório, plano (`demo/planos.js`) ou equipe no backend → mude lá também e rode
+  `npm run build:demo`.
 - Antes de subir: `cd backend && ./gradlew test` e `cd frontend && npm run build`.

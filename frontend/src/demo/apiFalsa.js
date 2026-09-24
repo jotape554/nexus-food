@@ -3,6 +3,9 @@ import { dinheiro, diaOperacional, ErroRegra } from './regras';
 import { criarPedido, mudarStatus, paraAcompanhamento, paraPainel, proximoId, USUARIO_DEMO } from './servico';
 import { gerarRelatorio } from './relatorio';
 import { gerarNexus } from './nexus';
+import {
+  NOME, ORDEM, RECURSOS, dados, liberado, listarPlanos, menorPlanoComHistoricoDesde, menorPlanoParaUsuarios, primeiroDiaDoHistorico,
+} from './planos';
 
 /**
  * "Backend" da demonstração: atende no navegador as mesmas rotas que o frontend chama, com os
@@ -15,12 +18,6 @@ const CHAVE_ARMAZENAMENTO = 'nexusfood_demo';
 // algumas horas eles ficariam todos "atrasados", então a demo recomeça sozinha.
 const VALIDADE_MS = 6 * 60 * 60 * 1000;
 const LATENCIA_MS = 120;
-
-const PLANOS = [
-  { plano: 'BASICO', precoMensal: 69.9, descricao: 'Cardápio digital, painel de pedidos e relatório do dia' },
-  { plano: 'PROFISSIONAL', precoMensal: 129.9, descricao: 'Relatórios de 12 meses e Nexus Score' },
-  { plano: 'PREMIUM', precoMensal: 199.9, descricao: 'Histórico completo, indicadores detalhados e insights' },
-];
 
 const SESSAO = { token: 'demo', nome: USUARIO_DEMO, papel: 'ADMINISTRADOR', restauranteId: 1, restauranteSlug: 'cantina-da-nona' };
 
@@ -52,6 +49,16 @@ export function aoMudar(fn) {
   return () => ouvintes.delete(fn);
 }
 
+/** A barra da demonstração troca o plano direto, como uma mudança feita no portal da Stripe. */
+export function definirPlanoDemo(plano) {
+  estado.plano = plano;
+  salvar();
+}
+
+export function planoDemo() {
+  return estado.plano;
+}
+
 export function reiniciarDemonstracao() {
   estado = criarEstadoInicial(Date.now());
   salvar();
@@ -76,6 +83,18 @@ function erro(status, mensagem, extra = {}) {
 const naoEncontrado = (o) => erro(404, `${o} não encontrado`);
 const naoEncontrada = (o) => erro(404, `${o} não encontrada`);
 const invalido = (mensagem) => erro(400, mensagem);
+
+/** PlanoInsuficienteException → 402 com o plano que resolve. */
+function planoInsuficiente(recurso, planoNecessario, mensagem, extra = {}) {
+  return erro(402, mensagem, { upgradeNecessario: true, recurso, planoNecessario, planoNecessarioNome: NOME[planoNecessario], ...extra });
+}
+
+function exigirRecurso(recurso) {
+  if (!liberado(estado.plano, recurso)) {
+    const { plano, nome } = RECURSOS[recurso];
+    throw planoInsuficiente(recurso, plano, `${nome} faz parte do plano ${NOME[plano]} ou superior.`);
+  }
+}
 
 function exigir(condicao, mensagem) {
   if (!condicao) throw invalido(mensagem);
@@ -138,6 +157,50 @@ function dadosBairro(body) {
 
 const ordenadosPorCriacao = (lista) => [...lista].sort((a, b) => a.criadoEm.localeCompare(b.criadoEm));
 
+const DATA = (iso) => iso.split('-').reverse().join('/');
+
+// ---------- equipe (espelho do EquipeService) ----------
+
+const EU = 1; // a demo está sempre logada como a Joana, administradora
+
+const ativos = () => estado.usuarios.filter((u) => u.ativo);
+const limiteUsuarios = () => dados(estado.plano).limiteUsuarios;
+
+/** Fila de quem "cabe" no plano: administradores primeiro, depois quem entrou antes. */
+function foraDoLimite() {
+  const limite = limiteUsuarios();
+  if (limite == null) return new Set();
+  const fila = ativos().sort((a, b) => ((a.papel === 'ADMINISTRADOR' ? 0 : 1) - (b.papel === 'ADMINISTRADOR' ? 0 : 1)) || a.id - b.id);
+  return new Set(fila.slice(limite).map((u) => u.id));
+}
+
+function usuarioResposta(u, fora = foraDoLimite()) {
+  return { id: u.id, nome: u.nome, email: u.email, papel: u.papel, ativo: u.ativo, convitePendente: u.convitePendente, voce: u.id === EU, foraDoLimite: fora.has(u.id) };
+}
+
+function exigirVaga() {
+  const limite = limiteUsuarios();
+  if (limite == null) return;
+  const n = ativos().length;
+  if (n >= limite) {
+    const necessario = menorPlanoParaUsuarios(n + 1);
+    throw planoInsuficiente('EQUIPE', necessario,
+      `Seu plano permite ${limite} usuários ativos e todos estão em uso. Desative alguém ou mude para o plano ${NOME[necessario]}.`,
+      { limiteUsuarios: limite });
+  }
+}
+
+function deixariaSemAdministrador(u, continuaAdminAtivo) {
+  if (continuaAdminAtivo || u.papel !== 'ADMINISTRADOR' || !u.ativo) return false;
+  return ativos().filter((x) => x.papel === 'ADMINISTRADOR').length <= 1;
+}
+
+function conviteResposta(u) {
+  const base = import.meta.env.VITE_URL_PUBLICA || 'https://nexusfood.com.br';
+  const token = Array.from({ length: 32 }, () => 'abcdefghijkmnpqrstuvwxyz23456789'[Math.floor(Math.random() * 32)]).join('');
+  return { usuario: usuarioResposta(u), link: `${base}/redefinir-senha?token=${token}`, expiraEm: new Date(agora() + 72 * 3600000).toISOString() };
+}
+
 // ---------- rotas ----------
 
 const ROTAS = [
@@ -145,20 +208,93 @@ const ROTAS = [
   ['POST', /^\/auth\/(login|registro)$/, () => SESSAO],
   ['POST', /^\/auth\/(esqueci-senha|redefinir-senha)$/, () => null],
 
-  // assinatura
+  // assinatura (a demo começa com a assinatura ativa; trocar de plano é imediato e sem cobrança)
   ['GET', /^\/api\/assinatura$/, () => {
-    const fim = new Date(estado.geradoEm + 14 * 86400000);
+    const plano = estado.plano;
+    const hoje = diaOperacional(agora(), r().fusoHorario, r().horaViradaDia);
     return {
-      plano: 'BASICO', precoMensal: 69.9, descricaoPlano: PLANOS[0].descricao, status: 'TRIAL',
-      dataFimTrial: fim.toISOString().slice(0, 10), diasRestantesTrial: 14, acessoLiberado: true,
+      plano, precoMensal: dados(plano).precoMensal, descricaoPlano: dados(plano).descricao, status: 'ATIVA',
+      dataFimTrial: null, diasRestantesTrial: null, acessoLiberado: true, planoEfetivo: plano,
+      recursos: Object.fromEntries(Object.keys(RECURSOS).map((rec) => [rec, liberado(plano, rec)])),
+      limiteUsuarios: limiteUsuarios(), usuariosAtivos: ativos().length,
+      primeiroDiaRelatorio: primeiroDiaDoHistorico(plano, hoje), usuarioForaDoLimite: false, assinaturaNaStripe: true,
     };
   }],
-  ['GET', /^\/api\/assinatura\/planos$/, () => PLANOS],
-  ['POST', /^\/api\/assinatura\/(checkout|portal)/, () => {
-    throw invalido('Na demonstração não dá para assinar. No sistema real, este botão abre o pagamento seguro da Stripe.');
+  ['GET', /^\/api\/assinatura\/planos$/, () => listarPlanos()],
+  ['POST', /^\/api\/assinatura\/plano$/, (_m, q) => {
+    const plano = q.get('plano');
+    exigir(ORDEM.includes(plano), 'Plano inválido.');
+    const limite = dados(plano).limiteUsuarios;
+    const n = ativos().length;
+    if (limite != null && n > limite) {
+      const sobra = n - limite;
+      throw invalido(`O plano ${NOME[plano]} permite ${limite} usuários ativos e sua equipe tem ${n}. Desative ${sobra} usuário${sobra === 1 ? '' : 's'} em Equipe antes de mudar.`);
+    }
+    exigir(plano !== estado.plano, 'Este já é o seu plano.');
+    estado.plano = plano;
+    salvar();
+    return { url: null, plano, mensagem: `Pronto! Seu plano agora é o ${NOME[plano]}. Na demonstração a troca é imediata e sem cobrança.` };
+  }],
+  ['POST', /^\/api\/assinatura\/portal/, () => {
+    throw invalido('Na demonstração não há cobrança. No sistema real, este botão abre o portal seguro da Stripe.');
   }],
 
-  // configuração do restaurante
+  // equipe
+  ['GET', /^\/api\/usuarios$/, () => {
+    exigirRecurso('EQUIPE');
+    const fora = foraDoLimite();
+    const lista = [...estado.usuarios].sort((a, b) => (b.ativo - a.ativo) || a.nome.localeCompare(b.nome, 'pt-BR'));
+    const n = ativos().length;
+    const limite = limiteUsuarios();
+    return {
+      usuarios: lista.map((u) => usuarioResposta(u, fora)), usuariosAtivos: n, limiteUsuarios: limite,
+      planoEfetivo: estado.plano, proximoPlano: limite != null && n >= limite ? menorPlanoParaUsuarios(n + 1) : null,
+    };
+  }],
+  ['POST', /^\/api\/usuarios$/, (_m, _q, b) => {
+    exigir(texto(b.nome), 'Informe o nome.');
+    exigir(texto(b.email) && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(b.email.trim()), 'Informe um e-mail válido.');
+    exigir(['ADMINISTRADOR', 'GERENTE', 'ATENDENTE'].includes(b.papel), 'Escolha o perfil.');
+    const email = b.email.trim().toLowerCase();
+    exigir(!estado.usuarios.some((u) => u.email === email), 'Já existe um usuário com este e-mail no Nexus Food.');
+    exigirVaga();
+    const u = { id: proximoId(estado, 'usuario'), nome: texto(b.nome), email, papel: b.papel, ativo: true, convitePendente: true };
+    estado.usuarios.push(u);
+    salvar();
+    return conviteResposta(u);
+  }],
+  ['PUT', /^\/api\/usuarios\/(\d+)$/, (m, _q, b) => {
+    const u = buscar(estado.usuarios, m[1], 'Usuário');
+    exigir(texto(b.nome), 'Informe o nome.');
+    exigir(!(u.id === EU && b.papel !== u.papel), 'Você não pode mudar o seu próprio perfil. Peça a outro administrador.');
+    exigir(!deixariaSemAdministrador(u, b.papel === 'ADMINISTRADOR' && u.ativo), 'O restaurante precisa de pelo menos um administrador ativo.');
+    u.nome = texto(b.nome);
+    u.papel = b.papel;
+    salvar();
+    return usuarioResposta(u);
+  }],
+  ['PATCH', /^\/api\/usuarios\/(\d+)\/ativo$/, (m, q) => {
+    const u = buscar(estado.usuarios, m[1], 'Usuário');
+    const ativo = q.get('valor') === 'true';
+    if (u.ativo !== ativo) {
+      if (!ativo) {
+        exigir(u.id !== EU, 'Você não pode desativar o seu próprio acesso.');
+        exigir(!deixariaSemAdministrador(u, false), 'O restaurante precisa de pelo menos um administrador ativo.');
+      } else {
+        exigirVaga();
+      }
+      u.ativo = ativo;
+      salvar();
+    }
+    return usuarioResposta(u);
+  }],
+  ['POST', /^\/api\/usuarios\/(\d+)\/link$/, (m) => {
+    const u = buscar(estado.usuarios, m[1], 'Usuário');
+    exigir(u.id !== EU, 'Para trocar a sua senha, use a opção Esqueci minha senha na tela de login.');
+    exigir(u.ativo, 'Reative o usuário antes de gerar um novo link.');
+    return conviteResposta(u);
+  }],
+
   ['GET', /^\/api\/restaurante$/, () => configuracao()],
   ['PUT', /^\/api\/restaurante$/, (_m, _q, b) => {
     exigir(texto(b.nome), 'Informe o nome do restaurante.');
@@ -295,7 +431,15 @@ const ROTAS = [
   // relatórios
   ['GET', /^\/api\/relatorios\/vendas$/, (_m, q) => {
     try {
-      return gerarRelatorio(estado, q, agora());
+      const rel = gerarRelatorio(estado, q, agora());
+      const primeiro = primeiroDiaDoHistorico(estado.plano, rel.hoje);
+      if (primeiro && rel.inicio < primeiro) {
+        const necessario = menorPlanoComHistoricoDesde(rel.inicio, rel.hoje);
+        throw planoInsuficiente('RELATORIOS', necessario,
+          `Seu plano mostra relatórios a partir de ${DATA(primeiro)}. Períodos mais antigos fazem parte do plano ${NOME[necessario]}.`,
+          { primeiroDiaPermitido: primeiro });
+      }
+      return { ...rel, primeiroDiaPermitido: primeiro };
     } catch (e) {
       if (e.regra) throw invalido(e.message);
       throw e;
@@ -303,7 +447,22 @@ const ROTAS = [
   }],
 
   // Nexus Score
-  ['GET', /^\/api\/nexus$/, () => gerarNexus(estado, agora())],
+  ['GET', /^\/api\/nexus$/, () => {
+    exigirRecurso('NEXUS_SCORE');
+    const n = gerarNexus(estado, agora());
+    if (liberado(estado.plano, 'NEXUS_DETALHES')) return { ...n, detalhesLiberados: true, insightsBloqueados: 0 };
+    // NexusResponse.semDetalhes(): mantém o que cada indicador mede, tira o resultado e as dicas.
+    return {
+      ...n,
+      areas: n.areas.map((a) => ({
+        ...a,
+        indicadores: a.indicadores.map((i) => ({ ...i, valor: null, pontos: null, pesoEfetivo: null, status: 'BLOQUEADO', motivo: null, amostra: 0 })),
+      })),
+      insights: [],
+      detalhesLiberados: false,
+      insightsBloqueados: n.insights.length,
+    };
+  }],
 
   // páginas do cliente final
   ['GET', /^\/public\/restaurantes\/([^/]+)$/, (m) => {

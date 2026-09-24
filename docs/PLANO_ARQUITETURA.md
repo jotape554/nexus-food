@@ -287,6 +287,24 @@ Ajustes técnicos:
 3. O front só esconde/mostra (`RecursoBloqueado`); quem decide é sempre o backend.
 4. Downgrade não apaga nada; só bloqueia a leitura.
 
+**Como ficou (Fase 5):**
+- `@RequerRecurso` / `@AcessoLivre` + `RecursoInterceptor`; o `RecursoGateFilter` (mapa de prefixos) foi removido.
+  `RecursoAnotacaoTest` falha se alguma rota de `/api/**` não declarar nenhum dos dois.
+- `AcessoPlanoService` é o único ponto de "o que pode": teste grátis vale como Premium; assinatura ativa, o plano contratado.
+- Recursos: `NEXUS_SCORE` (Profissional) devolve 402 no Básico; `NEXUS_DETALHES` (Premium) não é rota
+  própria: no Profissional a mesma `/api/nexus` volta sem o valor de cada indicador e sem o texto das
+  dicas (`NexusResponse.semDetalhes()`, com `insightsBloqueados` para a tela dizer quantas existem).
+- Histórico do relatório: Básico = últimos 30 dias (e sempre o mês atual); Profissional = último ano
+  (e sempre o atalho "12 meses"); Premium = tudo. A comparação com o período anterior continua valendo.
+- Equipe (`/api/usuarios`, só administrador): convite por link de 72 h (e-mail + link para o WhatsApp),
+  perfis Administrador/Gerente/Atendente, limite de usuários ativos por plano (desativado não conta).
+  Trocar para um plano menor que a equipe é recusado antes de cobrar; se o plano diminuir por fora
+  (portal da Stripe), quem entrou por último fica sem acesso (402 `usuarioForaDoLimite`) até o
+  administrador ajustar — administradores vêm primeiro na fila.
+- Troca de plano de quem já assina: `StripeGateway.trocarPreco` na assinatura existente (proporcional),
+  nunca um segundo checkout. `customer.subscription.updated` sincroniza plano e situação
+  (`past_due` mantém o acesso enquanto a Stripe tenta cobrar; `unpaid`/`canceled` encerram).
+
 ---
 
 ## 7. Frontend

@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import AssinaturaNexus from '../../components/AssinaturaNexus';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, aviso } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -31,6 +31,7 @@ export default function Login() {
         <h1>Entrar</h1>
         <p className="sub">Acesse o painel do seu restaurante.</p>
 
+        {!erro && aviso && <div className="aviso-sessao" role="status">{aviso}</div>}
         {erro && <div className="erro">{erro}</div>}
 
         <form onSubmit={handleSubmit}>

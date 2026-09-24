@@ -1,5 +1,7 @@
 package com.nexusfood.catalogo.controller;
 
+import com.nexusfood.plataforma.acesso.RequerRecurso;
+import com.nexusfood.plataforma.enums.Recurso;
 import com.nexusfood.catalogo.dto.CategoriaRequest;
 import com.nexusfood.catalogo.model.Categoria;
 import com.nexusfood.catalogo.service.CatalogoService;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequerRecurso(Recurso.CARDAPIO)
 @RequestMapping("/api/categorias")
 @RequiredArgsConstructor
 public class CategoriaController {

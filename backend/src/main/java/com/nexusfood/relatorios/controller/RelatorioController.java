@@ -1,5 +1,7 @@
 package com.nexusfood.relatorios.controller;
 
+import com.nexusfood.plataforma.acesso.RequerRecurso;
+import com.nexusfood.plataforma.enums.Recurso;
 import com.nexusfood.relatorios.dto.RelatorioVendasResponse;
 import com.nexusfood.relatorios.model.Agrupamento;
 import com.nexusfood.relatorios.service.RelatorioVendasService;
@@ -15,6 +17,7 @@ import java.time.LocalDate;
 
 /** Relatórios de vendas. Faturamento é assunto da gestão: atendente não acessa. */
 @RestController
+@RequerRecurso(Recurso.RELATORIOS)
 @RequestMapping("/api/relatorios")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMINISTRADOR','GERENTE')")

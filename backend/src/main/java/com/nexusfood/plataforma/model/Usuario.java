@@ -45,6 +45,10 @@ public class Usuario {
     @Builder.Default
     private boolean ativo = true;
 
+    /** Criado pelo administrador e ainda sem senha própria (o link de convite não foi usado). */
+    @Builder.Default
+    private boolean convitePendente = false;
+
     /** Preenchidos só durante um pedido de "esqueci minha senha" em andamento. */
     @JsonIgnore
     private String resetSenhaToken;

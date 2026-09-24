@@ -1,6 +1,7 @@
 import { DEMO } from '../demo/modo';
 
 const TOKEN_KEY = 'nexusfood_token';
+export const EVENTO_SESSAO_ENCERRADA = 'nexusfood:sessao-encerrada';
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 // O navegador pode recusar o armazenamento (janela anônima, dados bloqueados): sem ele o
@@ -40,6 +41,12 @@ async function request(path, { method = 'GET', body, autenticado = true } = {}) 
   const texto = await resp.text();
   if (texto) {
     try { data = JSON.parse(texto); } catch { data = texto; }
+  }
+
+  // Token vencido ou usuário desativado: encerra a sessão e a tela volta para o login.
+  if (resp.status === 401 && autenticado && getToken()) {
+    setToken(null);
+    window.dispatchEvent(new CustomEvent(EVENTO_SESSAO_ENCERRADA, { detail: data?.mensagem }));
   }
 
   if (!resp.ok) {

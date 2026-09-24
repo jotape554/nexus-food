@@ -1,16 +1,22 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AssinaturaNexus from './AssinaturaNexus';
+import Icone from './Icone';
+import { NOME_PLANO, PLANO_DO_RECURSO, usePlano } from '../plano';
 
+// perfis: quem vê o item (sem a chave = todos). recurso: mostra o selo do plano quando não está liberado.
 const ITENS = [
   { to: '/painel/pedidos', label: 'Pedidos', icone: '◱' },
   { to: '/painel/cardapio', label: 'Cardápio', icone: '☰' },
   { to: '/painel/clientes', label: 'Clientes', icone: '◍' },
-  { to: '/painel/relatorios', label: 'Relatórios', icone: '▥', gestao: true },
-  { to: '/painel/nexus', label: 'Nexus Score', icone: '✦', gestao: true },
-  { to: '/painel/configuracoes', label: 'Configurações', icone: '⚙', gestao: true },
-  { to: '/painel/assinatura', label: 'Assinatura', icone: '◆', gestao: true },
+  { to: '/painel/relatorios', label: 'Relatórios', icone: '▥', perfis: ['ADMINISTRADOR', 'GERENTE'] },
+  { to: '/painel/nexus', label: 'Nexus Score', icone: '✦', perfis: ['ADMINISTRADOR', 'GERENTE'], recurso: 'NEXUS_SCORE' },
+  { to: '/painel/configuracoes', label: 'Configurações', icone: '⚙', perfis: ['ADMINISTRADOR', 'GERENTE'] },
+  { to: '/painel/equipe', label: 'Equipe', icone: '◎', perfis: ['ADMINISTRADOR'] },
+  { to: '/painel/assinatura', label: 'Assinatura', icone: '◆', perfis: ['ADMINISTRADOR', 'GERENTE'] },
 ];
+
+const NOME_PAPEL = { ADMINISTRADOR: 'Administrador', GERENTE: 'Gerente', ATENDENTE: 'Atendente' };
 
 function iniciais(nome) {
   if (!nome) return '?';
@@ -27,8 +33,10 @@ export default function Sidebar() {
     navigate('/login');
   }
 
-  // Atendente opera pedidos, cardápio (esgotado) e clientes; relatórios, configurações e assinatura são da gestão.
-  const itens = usuario?.papel === 'ATENDENTE' ? ITENS.filter((item) => !item.gestao) : ITENS;
+  const { liberado } = usePlano();
+
+  // Atendente opera pedidos, cardápio (esgotado) e clientes; o resto é da gestão; equipe, só do administrador.
+  const itens = ITENS.filter((item) => !item.perfis || item.perfis.includes(usuario?.papel));
 
   return (
     <aside className="sidebar">
@@ -42,6 +50,11 @@ export default function Sidebar() {
           >
             <span aria-hidden="true" style={{ marginRight: 10, opacity: 0.85 }}>{item.icone}</span>
             {item.label}
+            {item.recurso && !liberado(item.recurso) && (
+              <span className="icone-plano" title={`Disponível no plano ${NOME_PLANO[PLANO_DO_RECURSO[item.recurso]]}`}>
+                <Icone nome="cadeado" tamanho={13} />
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -55,9 +68,9 @@ export default function Sidebar() {
           <button
             className="sidebar-link"
             onClick={handleSair}
-            style={{ padding: 0, color: 'rgba(239,235,226,0.55)', fontSize: '0.78rem', textTransform: 'capitalize' }}
+            style={{ padding: 0, color: 'rgba(239,235,226,0.55)', fontSize: '0.78rem' }}
           >
-            {usuario?.papel?.toLowerCase()} · Sair
+            {NOME_PAPEL[usuario?.papel] || usuario?.papel} · Sair
           </button>
         </div>
       </div>

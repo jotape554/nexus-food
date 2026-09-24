@@ -7,7 +7,12 @@ import './styles/app.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, refetchOnWindowFocus: true },
+    // Tenta de novo só falha de rede ou do servidor; 4xx (sem permissão, fora do plano, não
+    // encontrado) é resposta definitiva e tem que aparecer na hora.
+    queries: {
+      retry: (tentativas, erro) => tentativas < 1 && !(erro?.status >= 400 && erro?.status < 500),
+      refetchOnWindowFocus: true,
+    },
   },
 });
 

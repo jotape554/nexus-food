@@ -46,4 +46,14 @@ public class StripeConfig {
     public String priceIdPara(PlanoSaas plano) {
         return precoPorPlano.get(plano);
     }
+
+    /** Caminho inverso, para os eventos da Stripe que só trazem o price id. */
+    public PlanoSaas planoDoPriceId(String priceId) {
+        if (priceId == null) return null;
+        return precoPorPlano.entrySet().stream()
+                .filter(e -> priceId.equals(e.getValue()))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
 }

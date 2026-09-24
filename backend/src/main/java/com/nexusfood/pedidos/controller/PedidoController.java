@@ -1,5 +1,7 @@
 package com.nexusfood.pedidos.controller;
 
+import com.nexusfood.plataforma.acesso.RequerRecurso;
+import com.nexusfood.plataforma.enums.Recurso;
 import com.nexusfood.pedidos.dto.MudarStatusRequest;
 import com.nexusfood.pedidos.dto.PedidoResponse;
 import com.nexusfood.pedidos.service.PedidoService;
@@ -13,6 +15,7 @@ import java.util.List;
 
 /** Painel de pedidos do restaurante. Toda a equipe (inclusive atendente) pode operar. */
 @RestController
+@RequerRecurso(Recurso.PEDIDOS)
 @RequestMapping("/api/pedidos")
 @RequiredArgsConstructor
 public class PedidoController {

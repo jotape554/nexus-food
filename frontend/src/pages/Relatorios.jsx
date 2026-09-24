@@ -4,6 +4,7 @@ import { api } from '../api/http';
 import { moeda, MODALIDADE_LABEL, PAGAMENTO_LABEL } from '../api/formato';
 import GraficoColunas from '../components/graficos/GraficoColunas';
 import RecursoBloqueado from '../components/RecursoBloqueado';
+import Icone from '../components/Icone';
 import { salvarArquivo } from '../api/arquivo';
 
 // ---------- datas (sempre em AAAA-MM-DD, sem fuso: são dias operacionais) ----------
@@ -151,6 +152,9 @@ export default function Relatorios() {
   const [erroPeriodo, setErroPeriodo] = useState('');
   const [erroArquivo, setErroArquivo] = useState('');
   const [hoje, setHoje] = useState(null);
+  // Primeiro dia que o plano deixa consultar: undefined até o primeiro relatório, null = sem limite.
+  const [primeiroDia, setPrimeiroDia] = useState(undefined);
+  const [bloqueio, setBloqueio] = useState(null);
   const ultimoRelatorio = useRef(null);
 
   const { data, error, isLoading, isFetching } = useQuery({
@@ -165,7 +169,18 @@ export default function Relatorios() {
 
   useEffect(() => {
     if (data?.hoje) setHoje(data.hoje);
-  }, [data?.hoje]);
+    if (data) setPrimeiroDia(data.primeiroDiaPermitido ?? null);
+  }, [data]);
+
+  const foraDoPlano = (inicio) => !!primeiroDia && inicio < primeiroDia;
+
+  // Mesmo recorte do backend (PlanoSaas): até 1 ano atrás é Profissional; antes disso, Premium.
+  function avisarForaDoPlano(inicio) {
+    setBloqueio({
+      planoNecessario: inicio >= somarDias(hoje, -364) ? 'PROFISSIONAL' : 'PREMIUM',
+      mensagem: `Seu plano mostra relatórios a partir de ${dataCompleta(primeiroDia)}.`,
+    });
+  }
 
   async function baixarPlanilha() {
     setErroArquivo('');
@@ -180,6 +195,11 @@ export default function Relatorios() {
     if (!hoje) return;
     const [inicio, fim] = p.periodo(hoje);
     setErroPeriodo('');
+    if (foraDoPlano(inicio)) {
+      avisarForaDoPlano(inicio);
+      return;
+    }
+    setBloqueio(null);
     setFiltro({ preset: p.id, inicio, fim, agrupamento: p.agrupamento });
   }
 
@@ -196,6 +216,11 @@ export default function Relatorios() {
       return;
     }
     setErroPeriodo('');
+    if (foraDoPlano(inicio)) {
+      avisarForaDoPlano(inicio);
+      return;
+    }
+    setBloqueio(null);
     setFiltro({ preset: 'personalizado', inicio, fim, agrupamento: filtro.agrupamento });
   }
 
@@ -235,9 +260,10 @@ export default function Relatorios() {
     detalhes: [['Pedidos', inteiro(d.pedidos)]],
   })) : []), [r]);
 
-  if (error?.status === 402 && error.dados?.upgradeNecessario) {
-    return <RecursoBloqueado planoNecessario={error.dados.planoNecessario} mensagem={error.dados.mensagem} />;
-  }
+  // O backend é quem decide; se ele recusar um período, o aviso é o mesmo da checagem local.
+  const avisoPlano = bloqueio || (error?.status === 402 && error.dados?.upgradeNecessario
+    ? { planoNecessario: error.dados.planoNecessario, mensagem: error.dados.mensagem }
+    : null);
 
   const horaPico = horas.find((h) => h.destaque);
   const semVendas = r && r.resumo.pedidosConcluidos === 0;
@@ -257,15 +283,20 @@ export default function Relatorios() {
 
       <div className="filtros-relatorio">
         <div className="filtro-grupo" role="group" aria-label="Período">
-          {PRESETS.map((p) => (
-            <button type="button" key={p.id} className={`chip ${filtro.preset === p.id ? 'ativo' : ''}`} onClick={() => aplicarPreset(p)} disabled={!hoje}>
-              {p.rotulo}
-            </button>
-          ))}
+          {PRESETS.map((p) => {
+            const bloqueado = hoje && foraDoPlano(p.periodo(hoje)[0]);
+            return (
+              <button type="button" key={p.id} className={`chip ${filtro.preset === p.id ? 'ativo' : ''} ${bloqueado ? 'chip-bloqueado' : ''}`}
+                onClick={() => aplicarPreset(p)} disabled={!hoje} title={bloqueado ? 'Fora do histórico do seu plano' : undefined}>
+                {bloqueado && <Icone nome="cadeado" tamanho={12} />}
+                {p.rotulo}
+              </button>
+            );
+          })}
         </div>
         <form className="filtro-grupo periodo-livre" onSubmit={aplicarPersonalizado}>
           <label htmlFor="rel-inicio" className="sr-only">Data inicial</label>
-          <input id="rel-inicio" type="date" value={personalizado.inicio} onChange={(e) => setPersonalizado({ ...personalizado, inicio: e.target.value })} />
+          <input id="rel-inicio" type="date" min={primeiroDia || undefined} value={personalizado.inicio} onChange={(e) => setPersonalizado({ ...personalizado, inicio: e.target.value })} />
           <span className="suave">a</span>
           <label htmlFor="rel-fim" className="sr-only">Data final</label>
           <input id="rel-fim" type="date" value={personalizado.fim} onChange={(e) => setPersonalizado({ ...personalizado, fim: e.target.value })} />
@@ -280,6 +311,14 @@ export default function Relatorios() {
         </div>
       </div>
 
+      {avisoPlano && (
+        <RecursoBloqueado
+          compacto
+          planoNecessario={avisoPlano.planoNecessario}
+          titulo="Esse período está fora do seu plano"
+          mensagem={`${avisoPlano.mensagem} Nada foi apagado: o histórico completo aparece ao mudar de plano.`}
+        />
+      )}
       {(erroPeriodo || (error && error.status !== 402)) && (
         <div className="erro" role="alert">{erroPeriodo || error.message}</div>
       )}

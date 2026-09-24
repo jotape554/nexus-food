@@ -63,6 +63,11 @@ public class StripeWebhookController {
                     }
                 }
             }
+            case "customer.subscription.updated" -> {
+                if (objeto instanceof Subscription subscription) {
+                    assinaturaService.sincronizarAssinatura(subscription.getId(), precoDe(subscription), subscription.getStatus());
+                }
+            }
             case "customer.subscription.deleted" -> {
                 if (objeto instanceof Subscription subscription) {
                     assinaturaService.marcarCancelada(subscription.getId());
@@ -72,6 +77,13 @@ public class StripeWebhookController {
         }
 
         return ResponseEntity.ok("ok");
+    }
+
+    private String precoDe(Subscription subscription) {
+        if (subscription.getItems() == null || subscription.getItems().getData() == null
+                || subscription.getItems().getData().isEmpty()) return null;
+        var item = subscription.getItems().getData().get(0);
+        return item.getPrice() == null ? null : item.getPrice().getId();
     }
 
     private Long extrairRestauranteId(java.util.Map<String, String> metadata) {

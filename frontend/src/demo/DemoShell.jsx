@@ -3,7 +3,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthProvider } from '../context/AuthContext';
 import { Rotas } from '../App';
-import { aoMudar, reiniciarDemonstracao } from './apiFalsa';
+import { aoMudar, definirPlanoDemo, planoDemo, reiniciarDemonstracao } from './apiFalsa';
+import { NOME, ORDEM } from './planos';
 import { SLUG_DEMO } from './dadosIniciais';
 import AssinaturaNexus from '../components/AssinaturaNexus';
 import './demo.css';
@@ -39,11 +40,15 @@ export default function DemoShell() {
   const [visao, setVisao] = useState(() => (window.matchMedia(LARGURA_LADO_A_LADO).matches ? 'lado' : 'painel'));
   const [geracao, setGeracao] = useState(0);
   const [confirmandoReinicio, setConfirmandoReinicio] = useState(false);
+  const [plano, setPlano] = useState(planoDemo);
 
   const visaoEfetiva = visao === 'lado' && !larga ? 'painel' : visao;
 
   // Qualquer mudança nos dados (ex.: pedido novo no celular) atualiza as telas na hora.
-  useEffect(() => aoMudar(() => queryClient.invalidateQueries()), [queryClient]);
+  useEffect(() => aoMudar(() => {
+    setPlano(planoDemo());
+    queryClient.invalidateQueries();
+  }), [queryClient]);
 
   // "Seu cardápio: …" no painel leva para o celular do cliente.
   useEffect(() => {
@@ -88,6 +93,13 @@ export default function DemoShell() {
             <button type="button" aria-pressed={visaoEfetiva === 'cliente'} onClick={() => setVisao('cliente')}>Celular do cliente</button>
             {larga && <button type="button" aria-pressed={visaoEfetiva === 'lado'} onClick={() => setVisao('lado')}>Lado a lado</button>}
           </nav>
+
+          <div className="demo-planos" role="group" aria-label="Plano do restaurante na demonstração">
+            <span>Plano</span>
+            {ORDEM.map((p) => (
+              <button key={p} type="button" aria-pressed={plano === p} onClick={() => definirPlanoDemo(p)}>{NOME[p]}</button>
+            ))}
+          </div>
 
           <button type="button" className={`demo-reiniciar ${confirmandoReinicio ? 'confirmando' : ''}`} onClick={reiniciar}>
             {confirmandoReinicio ? 'Clique de novo para reiniciar' : 'Reiniciar demonstração'}

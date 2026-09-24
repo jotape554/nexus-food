@@ -5,7 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import com.nexusfood.plataforma.acesso.AcessoPlanoService;
+import com.nexusfood.plataforma.acesso.PlanoInsuficienteException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -48,6 +51,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleAcessoNegado(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(corpo(HttpStatus.FORBIDDEN, "Você não tem permissão para acessar este recurso."));
+    }
+
+    /** O plano não inclui o recurso: 402 com o plano que resolve, para a tela oferecer o upgrade. */
+    @ExceptionHandler(PlanoInsuficienteException.class)
+    public ResponseEntity<Map<String, Object>> handlePlanoInsuficiente(PlanoInsuficienteException ex) {
+        Map<String, Object> corpo = corpo(HttpStatus.PAYMENT_REQUIRED, ex.getMessage());
+        corpo.put("upgradeNecessario", true);
+        corpo.put("recurso", ex.getRecurso());
+        corpo.put("planoNecessario", ex.getPlanoNecessario().name());
+        corpo.put("planoNecessarioNome", AcessoPlanoService.nome(ex.getPlanoNecessario()));
+        corpo.putAll(ex.getDetalhes());
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(corpo);
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<Map<String, Object>> handleDesativado(DisabledException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(corpo(HttpStatus.UNAUTHORIZED, "Seu acesso foi desativado pelo administrador do restaurante."));
     }
 
     @ExceptionHandler(BadCredentialsException.class)

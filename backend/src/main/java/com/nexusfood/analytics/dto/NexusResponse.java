@@ -27,8 +27,25 @@ public record NexusResponse(
         List<Faixa> faixas,
         List<Area> areas,
         List<PontoHistorico> historico,
-        List<Insight> insights
+        List<Insight> insights,
+        /** false no plano Profissional: nota e áreas sim; valor de cada indicador e dicas, não. */
+        boolean detalhesLiberados,
+        /** Quantas dicas existem e o plano não mostra (para a tela dizer "3 dicas no Premium"). */
+        int insightsBloqueados
 ) {
+    /**
+     * Versão para quem tem a nota mas não os detalhes: mantém o que cada indicador mede e a
+     * regra (âncoras são públicas), tira o resultado de cada um e o texto das dicas.
+     */
+    public NexusResponse semDetalhes() {
+        List<Area> areasSemDetalhe = areas.stream().map(a -> new Area(a.codigo(), a.nome(), a.peso(), a.nota(), a.exibida(),
+                a.indicadores().stream().map(i -> new Indicador(i.codigo(), i.nome(), i.descricao(), i.unidade(),
+                        null, null, i.pesoNaArea(), null, "BLOQUEADO", null, 0, i.ancoras())).toList())).toList();
+        return new NexusResponse(dia, inicioJanela, regraVersao, situacao, nota, faixa, faixaNome, motivoSemNota, pesoValido,
+                diasHistorico, diasParaNota, diasParaOficial, pedidosConcluidosJanela, pedidosConcluidosMinimos, variacao7Dias,
+                faixas, areasSemDetalhe, historico, List.of(), false, insights.size());
+    }
+
     public record Faixa(String codigo, String nome, int de, int ate) {}
 
     public record Area(String codigo, String nome, BigDecimal peso, BigDecimal nota, boolean exibida, List<Indicador> indicadores) {}

@@ -4,7 +4,7 @@ import com.nexusfood.plataforma.security.AssinaturaGateFilter;
 import com.nexusfood.plataforma.security.CustomUserDetailsService;
 import com.nexusfood.plataforma.security.JwtAuthFilter;
 import com.nexusfood.plataforma.security.RateLimitFilter;
-import com.nexusfood.plataforma.security.RecursoGateFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +26,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -36,8 +37,8 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
     private final AssinaturaGateFilter assinaturaGateFilter;
-    private final RecursoGateFilter recursoGateFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -85,11 +86,23 @@ public class SecurityConfig {
                     .requestMatchers("/auth/**", "/public/**", "/webhooks/**").permitAll()
                     .anyRequest().authenticated()
             )
+            // Sem sessão válida (token vencido, usuário desativado): 401 em JSON, para a tela
+            // mandar a pessoa para o login em vez de mostrar "sem permissão".
+            .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, e) -> {
+                Object motivo = request.getAttribute(JwtAuthFilter.MOTIVO_SEM_SESSAO);
+                response.setStatus(401);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                objectMapper.writeValue(response.getWriter(), Map.of(
+                        "status", 401,
+                        "erro", "Unauthorized",
+                        "mensagem", motivo != null ? motivo : "Sua sessão terminou. Entre de novo."));
+            }))
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(jwtAuthFilter, RateLimitFilter.class)
-            .addFilterAfter(assinaturaGateFilter, JwtAuthFilter.class)
-            .addFilterAfter(recursoGateFilter, AssinaturaGateFilter.class);
+            .addFilterAfter(assinaturaGateFilter, JwtAuthFilter.class);
+        // O recurso de cada rota (plano) é checado depois, no RecursoInterceptor (@RequerRecurso).
 
         return http.build();
     }

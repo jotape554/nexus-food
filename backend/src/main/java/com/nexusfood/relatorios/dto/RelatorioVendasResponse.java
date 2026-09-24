@@ -10,6 +10,8 @@ import java.util.List;
 public record RelatorioVendasResponse(
         /** "Hoje" no dia operacional do restaurante — base dos atalhos de período da tela. */
         LocalDate hoje,
+        /** Primeiro dia que o plano atual deixa consultar (null = histórico completo). */
+        LocalDate primeiroDiaPermitido,
         LocalDate inicio,
         LocalDate fim,
         Agrupamento agrupamento,

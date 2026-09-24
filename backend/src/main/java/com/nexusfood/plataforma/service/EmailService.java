@@ -36,21 +36,8 @@ public class EmailService {
     @Value("${spring.mail.username:}")
     private String remetente;
 
-    /**
-     * Sem SENDGRID_API_KEY configurado (ambiente local, ou antes de configurar em produção),
-     * só registra o link no log em vez de tentar enviar de verdade.
-     */
     public void enviarRedefinicaoSenha(String destinatario, String link) {
-        String chave = apiKey == null ? "" : apiKey.trim();
-        String remetenteLimpo = remetente == null ? "" : remetente.trim();
-
-        if (chave.isBlank() || remetenteLimpo.isBlank()) {
-            log.info("SENDGRID_API_KEY/MAIL_USERNAME não configurados — envio de e-mail simulado. Link de redefinição para {}: {}",
-                    destinatario, link);
-            return;
-        }
-
-        String texto = """
+        enviar(destinatario, "Redefinir senha — Nexus Food", """
                 Recebemos um pedido para redefinir sua senha no Nexus Food.
 
                 Clique no link abaixo para criar uma nova senha (válido por 1 hora):
@@ -60,12 +47,40 @@ public class EmailService {
 
                 —
                 Nexus Food · um produto Nexus Sistemas
-                """.formatted(link);
+                """.formatted(link), link);
+    }
+
+    public void enviarConvite(String destinatario, String nome, String restaurante, String link, long validadeHoras) {
+        enviar(destinatario, "Convite para a equipe do restaurante " + restaurante + " — Nexus Food", """
+                Olá, %s!
+
+                Você agora faz parte da equipe do restaurante %s no Nexus Food.
+                Crie sua senha pelo link abaixo (válido por %d horas) e depois entre com este e-mail:
+                %s
+
+                —
+                Nexus Food · um produto Nexus Sistemas
+                """.formatted(nome, restaurante, validadeHoras, link), link);
+    }
+
+    /**
+     * Sem SENDGRID_API_KEY configurado (ambiente local, ou antes de configurar em produção),
+     * só registra o link no log em vez de tentar enviar de verdade.
+     */
+    private void enviar(String destinatario, String assunto, String texto, String linkParaLog) {
+        String chave = apiKey == null ? "" : apiKey.trim();
+        String remetenteLimpo = remetente == null ? "" : remetente.trim();
+
+        if (chave.isBlank() || remetenteLimpo.isBlank()) {
+            log.info("SENDGRID_API_KEY/MAIL_USERNAME não configurados — envio de e-mail simulado. \"{}\" para {}: {}",
+                    assunto, destinatario, linkParaLog);
+            return;
+        }
 
         Map<String, Object> corpo = Map.of(
                 "personalizations", List.of(Map.of("to", List.of(Map.of("email", destinatario)))),
                 "from", Map.of("email", remetenteLimpo),
-                "subject", "Redefinir senha — Nexus Food",
+                "subject", assunto,
                 "content", List.of(Map.of("type", "text/plain", "value", texto))
         );
 
@@ -77,14 +92,13 @@ public class EmailService {
                     .timeout(Duration.ofSeconds(10))
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
-
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 400) {
                 log.error("SendGrid recusou o envio (status {}): {}", response.statusCode(), response.body());
             }
         } catch (Exception e) {
-            log.error("Falha ao enviar e-mail de redefinição de senha via SendGrid", e);
+            log.error("Falha ao enviar e-mail \"{}\" via SendGrid", assunto, e);
         }
     }
 }

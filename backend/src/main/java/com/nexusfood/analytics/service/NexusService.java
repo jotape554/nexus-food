@@ -171,7 +171,8 @@ public class NexusService {
                 regra.faixas().stream().map(f -> new NexusResponse.Faixa(f.codigo(), f.nome(), f.de(), f.ate())).toList(),
                 areasResposta,
                 historico.stream().map(x -> new NexusResponse.PontoHistorico(x.getDia(), x.getNota(), x.getSituacao().name())).toList(),
-                insights.stream().map(i -> new NexusResponse.Insight(i.getId(), i.getDia(), i.getSeveridade().name(), i.getTexto())).toList());
+                insights.stream().map(i -> new NexusResponse.Insight(i.getId(), i.getDia(), i.getSeveridade().name(), i.getTexto())).toList(),
+                true, 0);
     }
 
     private Restaurante buscar(Long id) {

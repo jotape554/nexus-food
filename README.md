@@ -70,6 +70,9 @@ Se mudar uma regra de pedido no backend, mude também em `src/demo/regras.js` e
 | Restaurante | `/painel/relatorios` | Vendas por dia, semana e mês, com comparação e planilha |
 | Restaurante | `/painel/nexus` | Nexus Score: nota, áreas, indicadores, evolução e insights |
 | Restaurante | `/painel/configuracoes` | Modalidades, taxa de entrega, bairros, horários |
+| Restaurante | `/painel/equipe` | Usuários, perfis e convites (só administrador) |
+| Restaurante | `/painel/assinatura` | Planos, uso do plano e troca de plano |
+| Convidado | `/redefinir-senha?token=` | Cria a própria senha (convite) ou troca a senha |
 
 ## Fases
 
@@ -77,4 +80,16 @@ Se mudar uma regra de pedido no backend, mude também em `src/demo/regras.js` e
 2. ✅ Domínio do restaurante: cardápio, pedidos, clientes, painel
 3. ✅ Relatórios de vendas por dia, semana e mês
 4. ✅ Nexus Analytics: snapshots, indicadores, Nexus Score, insights
-5. Controle de acesso por plano
+5. ✅ Controle de acesso por plano e equipe
+
+### Planos
+
+| | Básico | Profissional | Premium |
+|---|---|---|---|
+| Cardápio, pedidos, clientes | ✓ | ✓ | ✓ |
+| Relatórios | últimos 30 dias | últimos 12 meses | histórico completo |
+| Usuários ativos | 2 | 5 | sem limite |
+| Nexus Score (nota, áreas, evolução) | — | ✓ | ✓ |
+| Indicadores detalhados e dicas | — | — | ✓ |
+
+O teste grátis (14 dias) libera tudo. A regra fica em `PlanoSaas` + `Recurso` (backend).

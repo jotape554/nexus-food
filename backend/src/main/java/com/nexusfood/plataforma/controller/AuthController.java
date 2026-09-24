@@ -1,6 +1,7 @@
 package com.nexusfood.plataforma.controller;
 
 import com.nexusfood.plataforma.dto.AuthResponse;
+import com.nexusfood.plataforma.dto.ConviteInfoResponse;
 import com.nexusfood.plataforma.dto.EsqueciSenhaRequest;
 import com.nexusfood.plataforma.dto.LoginRequest;
 import com.nexusfood.plataforma.dto.RedefinirSenhaRequest;
@@ -33,6 +34,11 @@ public class AuthController {
     public ResponseEntity<Void> esqueciSenha(@Valid @RequestBody EsqueciSenhaRequest req) {
         authService.esqueciSenha(req.getEmail());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/convite")
+    public ConviteInfoResponse convite(@RequestParam String token) {
+        return authService.convite(token);
     }
 
     @PostMapping("/redefinir-senha")

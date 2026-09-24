@@ -1,6 +1,7 @@
 package com.nexusfood.plataforma.service;
 
 import com.nexusfood.plataforma.dto.AuthResponse;
+import com.nexusfood.plataforma.dto.ConviteInfoResponse;
 import com.nexusfood.plataforma.dto.LoginRequest;
 import com.nexusfood.plataforma.dto.RegistroRequest;
 import com.nexusfood.plataforma.enums.Papel;
@@ -15,6 +16,8 @@ import com.nexusfood.plataforma.util.CpfValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,7 +49,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse registrar(RegistroRequest req) {
-        if (usuarioRepository.existsByEmail(req.getEmail())) {
+        if (usuarioRepository.existsByEmailIgnoreCase(req.getEmail().trim())) {
             throw new RegraDeNegocioException("Já existe um usuário com este e-mail.");
         }
 
@@ -85,10 +88,20 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest req) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getSenha()));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getSenha()));
+        } catch (DisabledException e) {
+            // O Spring checa "desativado" antes da senha: sem isto, qualquer um descobriria que o
+            // e-mail existe e foi desativado. Só conta que foi desativado para quem sabe a senha.
+            boolean senhaCerta = usuarioRepository.findByEmailIgnoreCase(req.getEmail().trim())
+                    .map(u -> passwordEncoder.matches(req.getSenha(), u.getSenhaHash()))
+                    .orElse(false);
+            if (!senhaCerta) throw new BadCredentialsException("E-mail ou senha inválidos");
+            throw e;
+        }
 
-        Usuario usuario = usuarioRepository.findByEmail(req.getEmail())
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(req.getEmail().trim())
                 .orElseThrow(() -> new RegraDeNegocioException("E-mail ou senha inválidos"));
 
         UsuarioPrincipal principal = new UsuarioPrincipal(usuario);
@@ -104,7 +117,7 @@ public class AuthService {
      */
     @Transactional
     public void esqueciSenha(String email) {
-        usuarioRepository.findByEmail(email).ifPresent(usuario -> {
+        usuarioRepository.findByEmailIgnoreCase(email.trim()).ifPresent(usuario -> {
             String token = UUID.randomUUID().toString();
             usuario.setResetSenhaToken(token);
             usuario.setResetSenhaExpiraEm(Instant.now(clock).plus(VALIDADE_TOKEN_RESET_MINUTOS, ChronoUnit.MINUTES));
@@ -125,9 +138,19 @@ public class AuthService {
         }
 
         usuario.setSenhaHash(passwordEncoder.encode(novaSenha));
+        usuario.setConvitePendente(false);
         usuario.setResetSenhaToken(null);
         usuario.setResetSenhaExpiraEm(null);
         usuarioRepository.save(usuario);
+    }
+
+    /** Quem abriu o link de convite: nome, e-mail e restaurante, para a tela de criar senha. */
+    @Transactional(readOnly = true)
+    public ConviteInfoResponse convite(String token) {
+        Usuario usuario = usuarioRepository.findByResetSenhaToken(token)
+                .filter(u -> u.getResetSenhaExpiraEm() != null && !Instant.now(clock).isAfter(u.getResetSenhaExpiraEm()))
+                .orElseThrow(() -> new RegraDeNegocioException("Link inválido ou expirado."));
+        return new ConviteInfoResponse(usuario.getNome(), usuario.getEmail(), usuario.getRestaurante().getNome(), usuario.isConvitePendente());
     }
 
     private String gerarSlugUnico(String nome) {

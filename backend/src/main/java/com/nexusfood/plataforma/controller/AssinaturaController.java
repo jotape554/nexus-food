@@ -1,10 +1,13 @@
 package com.nexusfood.plataforma.controller;
 
+import com.nexusfood.plataforma.acesso.AcessoLivre;
 import com.nexusfood.plataforma.dto.AssinaturaResponse;
 import com.nexusfood.plataforma.dto.CheckoutResponse;
+import com.nexusfood.plataforma.dto.MudancaPlanoResponse;
 import com.nexusfood.plataforma.dto.PlanoDisponivelResponse;
 import com.nexusfood.plataforma.enums.PlanoSaas;
 import com.nexusfood.plataforma.security.SecurityUtils;
+import com.nexusfood.plataforma.security.UsuarioPrincipal;
 import com.nexusfood.plataforma.service.AssinaturaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/assinatura")
 @RequiredArgsConstructor
+@AcessoLivre("É daqui que o restaurante escolhe o plano: precisa abrir em qualquer situação.")
 public class AssinaturaController {
 
     private final AssinaturaService assinaturaService;
@@ -26,22 +30,21 @@ public class AssinaturaController {
 
     @GetMapping
     public AssinaturaResponse status() {
-        return assinaturaService.status(SecurityUtils.restauranteAtualId());
+        UsuarioPrincipal usuario = SecurityUtils.usuarioAtual();
+        return assinaturaService.status(usuario.getRestauranteId(), usuario.getId());
     }
 
-    /** Cria a sessão de checkout na Stripe e devolve a URL para onde o navegador deve ser redirecionado. */
-    @PostMapping("/checkout")
+    /** Assina (checkout da Stripe) ou troca o plano da assinatura que já existe. */
+    @PostMapping("/plano")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public CheckoutResponse checkout(@RequestParam PlanoSaas plano) {
-        String url = assinaturaService.criarSessaoCheckout(SecurityUtils.restauranteAtualId(), plano);
-        return new CheckoutResponse(url);
+    public MudancaPlanoResponse escolherPlano(@RequestParam PlanoSaas plano) {
+        return assinaturaService.escolherPlano(SecurityUtils.restauranteAtualId(), plano);
     }
 
     /** URL do portal da Stripe para o restaurante gerenciar forma de pagamento ou cancelar. */
     @PostMapping("/portal")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public CheckoutResponse portal() {
-        String url = assinaturaService.criarSessaoPortal(SecurityUtils.restauranteAtualId());
-        return new CheckoutResponse(url);
+        return new CheckoutResponse(assinaturaService.criarSessaoPortal(SecurityUtils.restauranteAtualId()));
     }
 }

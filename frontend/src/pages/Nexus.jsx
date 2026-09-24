@@ -133,7 +133,14 @@ function Area({ area }) {
         </div>
       </header>
       <ul className="nexus-indicadores">
-        {area.indicadores.map((ind) => (
+        {area.indicadores.map((ind) => ind.status === 'BLOQUEADO' ? (
+          <li key={ind.codigo} className="bloqueado">
+            <div className="ind-linha">
+              <span className="ind-nome" title={ind.descricao}>{ind.nome}</span>
+              <span className="ind-valor"><Icone nome="cadeado" tamanho={13} /> Premium</span>
+            </div>
+          </li>
+        ) : (
           <li key={ind.codigo} className={ind.status === 'OK' ? '' : 'sem-dados'}>
             <div className="ind-linha">
               <span className="ind-nome" title={ind.descricao}>{ind.nome}</span>
@@ -173,7 +180,26 @@ export default function Nexus() {
   })) : []), [n]);
 
   if (error?.status === 402 && error.dados?.upgradeNecessario) {
-    return <RecursoBloqueado planoNecessario={error.dados.planoNecessario} mensagem={error.dados.mensagem} />;
+    return (
+      <div className="nexus">
+        <div className="page-header">
+          <div>
+            <h2>Nexus</h2>
+            <p>A saúde do seu restaurante em uma nota de 0 a 100, calculada todo dia com os seus pedidos.</p>
+          </div>
+        </div>
+        <RecursoBloqueado
+          planoNecessario={error.dados.planoNecessario}
+          titulo="Nexus Score faz parte do plano Profissional"
+          mensagem="Seus pedidos já estão sendo analisados. Ao mudar de plano, a nota aparece na hora, com o histórico completo."
+          beneficios={[
+            'Uma nota de 0 a 100 para vendas, clientes, operação e cardápio',
+            'A faixa do restaurante (de Crítico a Excelente) e quanto ela mudou na semana',
+            'A evolução da nota dia a dia',
+          ]}
+        />
+      </div>
+    );
   }
   if (isLoading) return <p>Calculando o Nexus Score...</p>;
   if (error) return <div className="erro" role="alert">{error.message}</div>;
@@ -195,6 +221,16 @@ export default function Nexus() {
       <div className="nexus-topo">
         <CartaoNota n={n} />
 
+        {!n.detalhesLiberados ? (
+          <RecursoBloqueado
+            compacto
+            planoNecessario="PREMIUM"
+            titulo={n.insightsBloqueados > 0
+              ? `${n.insightsBloqueados} ${n.insightsBloqueados === 1 ? 'dica pronta' : 'dicas prontas'} para o seu restaurante`
+              : 'Dicas e indicadores detalhados'}
+            mensagem="No Premium você vê o valor de cada indicador, quantos pontos ele deu e o que fazer para melhorar."
+          />
+        ) : (
         <section className="panel nexus-insights" aria-label="O que fazer agora">
           <h3>O que merece sua atenção</h3>
           {n.insights.length === 0 ? (
@@ -210,6 +246,7 @@ export default function Nexus() {
             </ul>
           )}
         </section>
+        )}
       </div>
 
       <div className="nexus-areas">

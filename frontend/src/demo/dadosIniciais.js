@@ -1,6 +1,6 @@
 import { criarPedido, mudarStatus, proximoId } from './servico';
 
-export const VERSAO_DADOS = 3; // mude ao alterar os dados de exemplo: quem já abriu a demo recebe os novos
+export const VERSAO_DADOS = 4; // mude ao alterar os dados de exemplo: quem já abriu a demo recebe os novos
 export const SLUG_DEMO = 'cantina-da-nona';
 
 const CARDAPIO = {
@@ -140,7 +140,13 @@ export function criarEstadoInicial(agoraMs) {
   const estado = {
     versao: VERSAO_DADOS,
     geradoEm: agoraMs,
-    seq: {},
+    seq: { usuario: 2 },
+    // A demo começa no Premium para mostrar tudo; a barra de cima troca o plano na hora.
+    plano: 'PREMIUM',
+    usuarios: [
+      { id: 1, nome: 'Joana Martins', email: 'joana@cantinadanona.com.br', papel: 'ADMINISTRADOR', ativo: true, convitePendente: false },
+      { id: 2, nome: 'Rafael Souza', email: 'rafael@cantinadanona.com.br', papel: 'GERENTE', ativo: true, convitePendente: false },
+    ],
     restaurante: {
       id: 1,
       nome: 'Cantina da Nona',
