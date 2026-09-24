@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
@@ -31,7 +31,7 @@ function TrialBanner({ status }) {
           ? `Seu período de teste termina em ${status.diasRestantesTrial} dia${status.diasRestantesTrial === 1 ? '' : 's'}.`
           : 'Seu período de teste termina hoje.'}
       </span>
-      <a href="/painel/assinatura" className="btn btn-latao" style={{ padding: '6px 14px' }}>Escolher plano</a>
+      <Link to="/painel/assinatura" className="btn btn-latao" style={{ padding: '6px 14px' }}>Escolher plano</Link>
     </div>
   );
 }
@@ -69,39 +69,46 @@ function CarregandoPagina() {
   return <div style={{ padding: 40, textAlign: 'center', color: 'var(--texto-suave)' }}>Carregando...</div>;
 }
 
+/** Todas as rotas do sistema. A demonstração monta estas mesmas rotas em dois roteadores. */
+export function Rotas() {
+  return (
+    <Suspense fallback={<CarregandoPagina />}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
+        <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+        <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+        <Route path="/r/:slug" element={<CardapioPublico />} />
+        <Route path="/pedido/:codigo" element={<AcompanhamentoPedido />} />
+
+        <Route
+          path="/painel"
+          element={
+            <ProtectedRoute>
+              <PainelLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/painel/pedidos" replace />} />
+          <Route path="pedidos" element={<Pedidos />} />
+          <Route path="cardapio" element={<Cardapio />} />
+          <Route path="clientes" element={<Clientes />} />
+          <Route path="configuracoes" element={<Configuracoes />} />
+          <Route path="assinatura" element={<Assinatura />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/painel" replace />} />
+      </Routes>
+    </Suspense>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Suspense fallback={<CarregandoPagina />}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/registro" element={<Registro />} />
-            <Route path="/esqueci-senha" element={<EsqueciSenha />} />
-            <Route path="/redefinir-senha" element={<RedefinirSenha />} />
-            <Route path="/r/:slug" element={<CardapioPublico />} />
-            <Route path="/pedido/:codigo" element={<AcompanhamentoPedido />} />
-
-            <Route
-              path="/painel"
-              element={
-                <ProtectedRoute>
-                  <PainelLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/painel/pedidos" replace />} />
-              <Route path="pedidos" element={<Pedidos />} />
-              <Route path="cardapio" element={<Cardapio />} />
-              <Route path="clientes" element={<Clientes />} />
-              <Route path="configuracoes" element={<Configuracoes />} />
-              <Route path="assinatura" element={<Assinatura />} />
-            </Route>
-
-            <Route path="*" element={<Navigate to="/painel" replace />} />
-          </Routes>
-        </Suspense>
+        <Rotas />
       </BrowserRouter>
     </AuthProvider>
   );

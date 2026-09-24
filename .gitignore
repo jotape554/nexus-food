@@ -8,6 +8,7 @@ backend/out/
 # Frontend (Node / Vite)
 frontend/node_modules/
 frontend/dist/
+frontend/dist-demo/
 frontend/.vite/
 
 # IDE

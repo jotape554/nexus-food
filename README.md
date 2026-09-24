@@ -41,6 +41,22 @@ npm run dev
 
 O Vite faz proxy de `/api`, `/auth`, `/public` e `/webhooks` para `http://localhost:8080`.
 
+## Demonstração (sem backend)
+
+```
+cd frontend
+npm run build:demo
+```
+
+Gera `frontend/dist-demo/nexus-food-demo.html`, um arquivo único que roda só no navegador.
+É o mesmo frontend, com uma API falsa (`src/demo/`) no lugar do servidor, que segue as mesmas
+regras do backend e usa os dados de exemplo da Cantina da Nona. Mostra o painel do
+restaurante e o celular do cliente, separados ou lado a lado: um pedido feito no celular
+chega no painel na hora. A build normal (`npm run build`) não inclui nada disso.
+
+Se mudar uma regra de pedido no backend, mude também em `src/demo/regras.js` e
+`src/demo/servico.js`.
+
 ## Rotas principais
 
 | Quem | Rota | O quê |

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { moeda } from '../api/formato';
 import Modal from '../components/Modal';
 import EstadoVazio from '../components/EstadoVazio';
+import { useConfirmacao } from '../components/Confirmacao';
 
 const PRODUTO_VAZIO = { categoriaId: '', nome: '', descricao: '', preco: '', imagemUrl: '', disponivel: true, ordem: 0 };
 const CATEGORIA_VAZIA = { nome: '', ordem: 0, ativa: true };
@@ -17,6 +18,8 @@ export default function Cardapio() {
   const [modal, setModal] = useState(null); // { tipo: 'produto'|'categoria', editando }
   const [form, setForm] = useState({});
   const [erro, setErro] = useState('');
+  const [erroLista, setErroLista] = useState('');
+  const [confirmar, confirmacao] = useConfirmacao();
 
   const categoriasQuery = useQuery({ queryKey: ['categorias'], queryFn: () => api.get('/api/categorias') });
   const produtosQuery = useQuery({ queryKey: ['produtos'], queryFn: () => api.get('/api/produtos') });
@@ -66,15 +69,16 @@ export default function Cardapio() {
   }
 
   async function remover(tipo, item) {
-    const texto = tipo === 'produto'
-      ? `Remover "${item.nome}" do cardápio? Os pedidos antigos continuam com ele no histórico.`
-      : `Remover a categoria "${item.nome}"?`;
-    if (!confirm(texto)) return;
+    const ok = await confirmar(tipo === 'produto'
+      ? { titulo: 'Remover produto', mensagem: `"${item.nome}" sai do cardápio. Os pedidos antigos continuam com ele no histórico.`, acao: 'Remover produto' }
+      : { titulo: 'Remover categoria', mensagem: `A categoria "${item.nome}" sai do cardápio.`, acao: 'Remover categoria' });
+    if (!ok) return;
+    setErroLista('');
     try {
       await api.delete(`/api/${tipo === 'produto' ? 'produtos' : 'categorias'}/${item.id}`);
       recarregar();
     } catch (e) {
-      alert(e.message);
+      setErroLista(e.message);
     }
   }
 
@@ -94,6 +98,8 @@ export default function Cardapio() {
           </div>
         )}
       </div>
+
+      {erroLista && <div className="erro" role="alert">{erroLista}</div>}
 
       {carregando ? <p>Carregando...</p> : categorias.length === 0 ? (
         <div className="panel">
@@ -229,6 +235,7 @@ export default function Cardapio() {
           </form>
         </Modal>
       )}
+      {confirmacao}
     </div>
   );
 }

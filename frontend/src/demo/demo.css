@@ -1,0 +1,137 @@
+/* Casca da demonstração. As telas do sistema dentro dela usam os estilos normais. */
+
+[hidden] { display: none !important; }
+
+.demo { min-height: 100vh; background: var(--papel); }
+
+.demo-barra {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--tinta);
+  color: var(--papel);
+}
+
+.demo-marca { display: flex; align-items: center; gap: 10px; }
+.demo-marca strong { font-family: var(--fonte-titulo); font-size: 1.2rem; font-weight: 500; }
+.demo-marca strong span { color: var(--latao); }
+.demo-selo {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta);
+  background: var(--latao-suave);
+  border-radius: var(--radius-full);
+  padding: 3px 9px;
+}
+
+.demo-visoes {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+}
+.demo-visoes button {
+  border: none;
+  background: none;
+  color: rgba(239, 235, 226, 0.75);
+  font-weight: 600;
+  font-size: 0.86rem;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+}
+.demo-visoes button:hover { color: var(--papel); }
+.demo-visoes button[aria-pressed="true"] { background: var(--latao); color: var(--tinta); }
+
+.demo-reiniciar {
+  margin-left: auto;
+  border: 1px solid rgba(239, 235, 226, 0.25);
+  background: none;
+  color: rgba(239, 235, 226, 0.8);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+}
+.demo-reiniciar:hover { color: var(--papel); border-color: rgba(239, 235, 226, 0.5); }
+.demo-reiniciar.confirmando { background: var(--vermelho-couro); border-color: var(--vermelho-couro); color: var(--branco); }
+
+.demo-dica {
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+  background: var(--papel-forte);
+  border-bottom: 1px solid var(--borda);
+}
+
+/* O painel usa a própria altura de tela; a barra da demo fica por cima, então o quadro desconta. */
+.demo .app-shell { min-height: calc(100vh - 92px); }
+.demo .quadro-pedidos { min-height: calc(100vh - 290px); }
+
+/* ---------- celular do cliente ---------- */
+
+.demo-lado-cliente { display: flex; justify-content: center; padding: 24px 16px 32px; }
+
+/*
+ * A moldura tem transform: assim os elementos "fixos" do cardápio (barra da sacola, botão de
+ * continuar) ficam presos na parte de baixo do celular, e não da janela. A rolagem acontece
+ * na tela interna, para esses elementos não rolarem junto.
+ */
+.demo-celular {
+  width: 390px;
+  max-width: 100%;
+  height: min(844px, calc(100vh - 160px));
+  min-height: 560px;
+  border: 10px solid var(--tinta);
+  border-radius: 38px;
+  overflow: hidden;
+  transform: translateZ(0);
+  box-shadow: var(--sombra-lg);
+  background: var(--tinta);
+}
+.demo-celular-tela { height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+.demo-celular .pub-shell { min-height: 100%; }
+.demo-celular .pub-content { padding: 0 12px; }
+.demo-celular .pub-card { padding: 20px 16px; }
+.demo-celular .checkout-topo { flex-direction: column; align-items: flex-start; }
+
+/* ---------- lado a lado ---------- */
+
+.demo-lado .demo-palco { display: grid; grid-template-columns: minmax(0, 1fr) 430px; align-items: start; }
+.demo-lado .demo-lado-cliente {
+  position: sticky;
+  top: 92px;
+  padding: 16px 16px 16px 0;
+}
+.demo-lado .demo-celular { height: calc(100vh - 124px); }
+.demo-lado .main.main-largo { padding: 24px; }
+.demo-lado .quadro-pedidos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.demo-lado .sidebar { width: 210px; }
+
+/* ---------- telas pequenas: o próprio aparelho é o celular ---------- */
+
+@media (max-width: 560px) {
+  .demo-reiniciar { margin-left: 0; }
+  .demo-dica { display: none; }
+  .demo-lado-cliente { padding: 0; }
+  .demo-celular {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    transform: none;
+    overflow: visible;
+  }
+  .demo-celular-tela { height: auto; overflow: visible; }
+}

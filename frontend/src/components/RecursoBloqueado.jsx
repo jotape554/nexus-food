@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const NOME_PLANO = { BASICO: 'Básico', PROFISSIONAL: 'Profissional', PREMIUM: 'Premium' };
 
 /** Tela "elegante" mostrada quando o recurso não está incluído no plano atual — nunca um erro cru. */
@@ -11,7 +13,7 @@ export default function RecursoBloqueado({ planoNecessario, mensagem }) {
       <p style={{ color: 'var(--texto-suave)', maxWidth: 420, margin: '0 auto 24px' }}>
         {mensagem || `Este recurso faz parte do plano ${nomePlano} ou superior.`}
       </p>
-      <a href="/painel/assinatura" className="btn btn-latao">Ver planos e fazer upgrade</a>
+      <Link to="/painel/assinatura" className="btn btn-latao">Ver planos e fazer upgrade</Link>
     </div>
   );
 }

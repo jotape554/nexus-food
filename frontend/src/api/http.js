@@ -1,16 +1,27 @@
+import { DEMO } from '../demo/modo';
+
 const TOKEN_KEY = 'nexusfood_token';
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
+// O navegador pode recusar o armazenamento (janela anônima, dados bloqueados): sem ele o
+// usuário só precisa entrar de novo, a tela não pode quebrar.
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
 }
 
 export function setToken(token) {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  else localStorage.removeItem(TOKEN_KEY);
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch { /* segue sem guardar */ }
 }
 
 async function request(path, { method = 'GET', body, autenticado = true } = {}) {
+  if (DEMO) {
+    const { responder } = await import('../demo/apiFalsa');
+    return responder(path, { method, body });
+  }
+
   const headers = { 'Content-Type': 'application/json' };
   if (autenticado) {
     const token = getToken();

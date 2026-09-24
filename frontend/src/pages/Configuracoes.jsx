@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/http';
 import { moeda } from '../api/formato';
 import EstadoVazio from '../components/EstadoVazio';
+import { useConfirmacao } from '../components/Confirmacao';
 
 function paraFormulario(r) {
   return {
@@ -27,6 +28,7 @@ function Bairros() {
   const { data: bairros = [] } = useQuery({ queryKey: ['bairros'], queryFn: () => api.get('/api/restaurante/bairros') });
   const [novo, setNovo] = useState({ nome: '', taxa: '' });
   const [erro, setErro] = useState('');
+  const [confirmar, confirmacao] = useConfirmacao();
 
   const recarregar = () => queryClient.invalidateQueries({ queryKey: ['bairros'] });
 
@@ -48,9 +50,18 @@ function Bairros() {
   }
 
   async function excluir(b) {
-    if (!confirm(`Excluir o bairro "${b.nome}"?`)) return;
-    await api.delete(`/api/restaurante/bairros/${b.id}`);
-    recarregar();
+    const ok = await confirmar({
+      titulo: 'Excluir bairro',
+      mensagem: `"${b.nome}" deixa de aparecer para o cliente. Pedidos antigos continuam com o bairro e a taxa que foram cobrados.`,
+      acao: 'Excluir bairro',
+    });
+    if (!ok) return;
+    try {
+      await api.delete(`/api/restaurante/bairros/${b.id}`);
+      recarregar();
+    } catch (err) {
+      setErro(err.message);
+    }
   }
 
   return (
@@ -81,6 +92,7 @@ function Bairros() {
           </tbody>
         </table>
       )}
+      {confirmacao}
     </div>
   );
 }

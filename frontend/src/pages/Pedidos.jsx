@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/http';
+import { DEMO } from '../demo/modo';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 import RecursoBloqueado from '../components/RecursoBloqueado';
@@ -349,10 +350,19 @@ export default function Pedidos() {
   const linkCardapio = restaurante ? `${baseLink}/r/${restaurante.slug || usuario?.restauranteSlug}` : '';
 
   function copiarLink() {
-    navigator.clipboard?.writeText(linkCardapio).then(() => {
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    });
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(linkCardapio)
+      .then(() => {
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2000);
+      })
+      .catch(() => { /* navegador recusou; o link continua visível para copiar à mão */ });
+  }
+
+  function abrirCardapio(e) {
+    if (!DEMO) return;
+    e.preventDefault();
+    window.dispatchEvent(new Event('nexusdemo:abrir-cliente'));
   }
 
   return (
@@ -362,7 +372,7 @@ export default function Pedidos() {
           <h2>Pedidos</h2>
           {linkCardapio && (
             <p className="link-cardapio">
-              Seu cardápio: <a href={linkCardapio} target="_blank" rel="noreferrer">{linkCardapio.replace(/^https?:\/\//, '')}</a>
+              Seu cardápio: <a href={linkCardapio} target="_blank" rel="noreferrer" onClick={abrirCardapio}>{linkCardapio.replace(/^https?:\/\//, '')}</a>
               <button className="btn-link" onClick={copiarLink}>{copiado ? 'Copiado ✓' : 'Copiar'}</button>
             </p>
           )}

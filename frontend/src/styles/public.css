@@ -1,6 +1,7 @@
 .pub-shell {
   min-height: 100vh;
   background: var(--papel);
+  display: flow-root; /* a margem do primeiro bloco não vaza para fora do fundo */
 }
 
 .pub-header {

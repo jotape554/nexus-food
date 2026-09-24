@@ -25,6 +25,21 @@ function gravarLocal(chave, valor) {
   try { localStorage.setItem(chave, JSON.stringify(valor)); } catch { /* navegação privada: segue sem salvar */ }
 }
 
+/**
+ * Volta ao topo do que está rolando: a janela no celular do cliente, ou a tela do celular
+ * quando o cardápio aparece dentro de uma moldura (demonstração) — sem arrastar a página junto.
+ */
+function rolarParaTopo(elemento) {
+  for (let no = elemento?.parentElement; no; no = no.parentElement) {
+    const rolagem = getComputedStyle(no).overflowY;
+    if ((rolagem === 'auto' || rolagem === 'scroll') && no.scrollHeight > no.clientHeight) {
+      no.scrollTop = 0;
+      return;
+    }
+  }
+  window.scrollTo({ top: 0 });
+}
+
 function novaChave() {
   return window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
@@ -67,6 +82,7 @@ export default function CardapioPublico() {
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
   const chaveIdempotencia = useRef(novaChave());
+  const topoRef = useRef(null);
 
   useEffect(() => gravarLocal(chaveCarrinho, carrinho), [carrinho]);
 
@@ -158,7 +174,7 @@ export default function CardapioPublico() {
   function irPara(novaEtapa) {
     setErro('');
     setEtapa(novaEtapa);
-    window.scrollTo({ top: 0 });
+    rolarParaTopo(topoRef.current);
   }
 
   function avancar() {
@@ -219,7 +235,7 @@ export default function CardapioPublico() {
   }
 
   return (
-    <div className="pub-shell">
+    <div className="pub-shell" ref={topoRef}>
       <header className="pub-header cardapio-header">
         {restaurante.logoUrl && <img className="logo-restaurante" src={restaurante.logoUrl} alt="" />}
         <h1>{restaurante.nome}</h1>
