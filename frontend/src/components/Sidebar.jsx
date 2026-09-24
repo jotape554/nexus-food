@@ -5,6 +5,7 @@ const ITENS = [
   { to: '/painel/pedidos', label: 'Pedidos', icone: '◱' },
   { to: '/painel/cardapio', label: 'Cardápio', icone: '☰' },
   { to: '/painel/clientes', label: 'Clientes', icone: '◍' },
+  { to: '/painel/relatorios', label: 'Relatórios', icone: '▥', gestao: true },
   { to: '/painel/configuracoes', label: 'Configurações', icone: '⚙', gestao: true },
   { to: '/painel/assinatura', label: 'Assinatura', icone: '◆', gestao: true },
 ];
@@ -24,7 +25,7 @@ export default function Sidebar() {
     navigate('/login');
   }
 
-  // Atendente opera pedidos, cardápio (esgotado) e clientes; configurações e assinatura são da gestão.
+  // Atendente opera pedidos, cardápio (esgotado) e clientes; relatórios, configurações e assinatura são da gestão.
   const itens = usuario?.papel === 'ATENDENTE' ? ITENS.filter((item) => !item.gestao) : ITENS;
 
   return (

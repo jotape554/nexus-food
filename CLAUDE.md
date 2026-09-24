@@ -41,7 +41,9 @@ plataforma → catalogo → clientes → pedidos → relatorios → analytics
    Acompanhamento só pelo `codigoPublico` (UUID).
 9. **Acesso por plano decidido no backend** (`Recurso` + `RecursoGateFilter`, resposta 402 com
    `upgradeNecessario`). O frontend só esconde/mostra.
-10. **Métricas (Fases 3/4) num lugar só** (`MetricasCalculator`), usado por relatórios e snapshots.
+10. **Métricas num lugar só:** `relatorios/service/MetricasCalculator` (venda = CONCLUIDO, dia =
+    `diaOperacional`, ticket = faturamento ÷ concluídos, cancelamento = cancelados ÷ recebidos).
+    Relatórios e, na Fase 4, os snapshots do Nexus usam essa mesma classe.
     Regras do Nexus Score publicadas são imutáveis: mudou peso/âncora → nova versão.
 
 ## Convenções
@@ -51,4 +53,8 @@ plataforma → catalogo → clientes → pedidos → relatorios → analytics
 - Respostas da API em DTOs (`record`), não entidades, quando há dado sensível ou lazy.
 - Testes: unitários puros para regras (ex.: `PedidoTransicaoTest`), integração com MockMvc + H2
   para fluxos. Use `RelogioDeTeste` (via `RelogioDeTesteConfig`) para controlar o tempo.
+- Consultas JPQL novas: testar também no PostgreSQL (o H2 aceita coisas que o Postgres recusa,
+  ex.: `:param IS NULL OR LOWER(:param)`).
+- Demonstração (`frontend/src/demo/`): espelha as regras do backend em JavaScript. Mudou regra de
+  pedido ou de relatório no backend → mude lá também e rode `npm run build:demo`.
 - Antes de subir: `cd backend && ./gradlew test` e `cd frontend && npm run build`.

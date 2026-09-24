@@ -1,6 +1,6 @@
 import { criarPedido, mudarStatus, proximoId } from './servico';
 
-export const VERSAO_DADOS = 1;
+export const VERSAO_DADOS = 2; // mude ao alterar os dados de exemplo: quem já abriu a demo recebe os novos
 export const SLUG_DEMO = 'cantina-da-nona';
 
 const CARDAPIO = {
@@ -54,6 +54,88 @@ const PEDIDOS = [
     []],
 ];
 
+// ---------- histórico de vendas (para os relatórios) ----------
+
+const NOMES = ['Ana', 'Bruno', 'Camila', 'Diego', 'Eduarda', 'Felipe', 'Gabriela', 'Henrique', 'Isabela', 'João', 'Larissa', 'Marcos',
+  'Natália', 'Otávio', 'Patrícia', 'Renato', 'Sofia', 'Tiago', 'Vanessa', 'Wagner', 'Yasmin', 'Lucas', 'Beatriz', 'Rodrigo'];
+const SOBRENOMES = ['Almeida', 'Barbosa', 'Cardoso', 'Duarte', 'Ferreira', 'Gomes', 'Lima', 'Moreira', 'Oliveira', 'Pereira', 'Ribeiro', 'Souza'];
+const DIAS_HISTORICO = 60;
+// Mais pedidos no almoço e no jantar.
+const HORAS = [11, 11, 12, 12, 12, 12, 13, 13, 13, 14, 18, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 22, 23];
+// Peso por dia da semana (0 = domingo): sexta e sábado são os dias fortes.
+const PESO_DIA = [1.3, 0.8, 0.9, 0.9, 1.0, 1.5, 1.7];
+// Todo pedido começa por um prato (garante o pedido mínimo); repetidos saem mais.
+const PRATOS = ['Margherita', 'Margherita', 'Margherita', 'Calabresa', 'Calabresa', 'Lasanha à bolonhesa', 'Lasanha à bolonhesa',
+  'Quatro queijos', 'Portuguesa', 'Nhoque ao sugo', 'Fettuccine Alfredo'];
+// Acompanhamentos e outros itens: repetidos saem mais.
+const PREFERIDOS = ['Margherita', 'Margherita', 'Margherita', 'Calabresa', 'Calabresa', 'Lasanha à bolonhesa', 'Lasanha à bolonhesa',
+  'Quatro queijos', 'Portuguesa', 'Nhoque ao sugo', 'Fettuccine Alfredo', 'Refrigerante lata', 'Refrigerante lata',
+  'Refrigerante lata', 'Suco natural 500ml', 'Suco natural 500ml', 'Vinho tinto (taça)', 'Tiramisù', 'Tiramisù', 'Panna cotta', 'Água sem gás'];
+
+/** Gerador pseudoaleatório com semente: a demo sai sempre com a mesma história. */
+function sorteador(semente) {
+  let s = semente;
+  const proximo = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  return { numero: proximo, escolher: (lista) => lista[Math.floor(proximo() * lista.length)] };
+}
+
+/** Meio-dia no fuso de São Paulo (UTC-3, sem horário de verão desde 2019) do dia N dias atrás. */
+function inicioDoDiaLocal(agoraMs, diasAtras) {
+  const hojeSp = new Date(agoraMs - 3 * 3600000);
+  return Date.UTC(hojeSp.getUTCFullYear(), hojeSp.getUTCMonth(), hojeSp.getUTCDate() - diasAtras) + 3 * 3600000;
+}
+
+function gerarHistorico(estado, agoraMs, produtoPorNome) {
+  const s = sorteador(20260924);
+  const clientes = Array.from({ length: 150 }, (_, i) => [
+    `${NOMES[i % NOMES.length]} ${SOBRENOMES[(i * 7) % SOBRENOMES.length]}`,
+    `119${String(70000000 + i * 911).padStart(8, '0')}`,
+  ]);
+  const frequentes = clientes.slice(0, 30);
+  const bairros = estado.bairros;
+
+  for (let d = DIAS_HISTORICO; d >= 1; d--) {
+    const inicioDia = inicioDoDiaLocal(agoraMs, d);
+    const diaSemana = new Date(inicioDia - 3 * 3600000).getUTCDay();
+    const crescimento = 1 + (DIAS_HISTORICO - d) / 120; // o movimento vem crescendo
+    const quantos = Math.round((4 + s.numero() * 4) * PESO_DIA[diaSemana] * crescimento);
+
+    for (let n = 0; n < quantos; n++) {
+      const hora = s.escolher(HORAS);
+      const criadoMs = inicioDia + hora * 3600000 + Math.floor(s.numero() * 60) * 60000;
+      const [nome, telefone] = s.numero() < 0.55 ? s.escolher(frequentes) : s.escolher(clientes);
+      const modalidade = s.escolher(['ENTREGA', 'ENTREGA', 'ENTREGA', 'RETIRADA', 'RETIRADA', 'CONSUMO_LOCAL']);
+      const itens = [{ produtoId: produtoPorNome[s.escolher(PRATOS)].id, quantidade: s.numero() < 0.2 ? 2 : 1 }];
+      const extras = Math.floor(s.numero() * 3);
+      for (let i = 0; i < extras; i++) {
+        itens.push({ produtoId: produtoPorNome[s.escolher(PREFERIDOS)].id, quantidade: s.numero() < 0.2 ? 2 : 1 });
+      }
+      const pedido = criarPedido(estado, {
+        chaveIdempotencia: `historico-${d}-${n}`,
+        nomeCliente: nome,
+        telefoneCliente: telefone,
+        modalidade,
+        formaPagamento: s.escolher(['PIX', 'PIX', 'PIX', 'CARTAO_CREDITO', 'CARTAO_CREDITO', 'CARTAO_DEBITO', 'DINHEIRO']),
+        enderecoEntrega: modalidade === 'ENTREGA' ? 'Endereço de exemplo' : null,
+        bairroId: modalidade === 'ENTREGA' ? s.escolher(bairros).id : null,
+        itens,
+      }, criadoMs);
+
+      const sorte = s.numero();
+      if (sorte < 0.05) {
+        mudarStatus(pedido, 'CANCELADO', criadoMs + 4 * 60000, 'ITEM_INDISPONIVEL');
+      } else if (sorte < 0.08) {
+        mudarStatus(pedido, 'CANCELADO', criadoMs + 6 * 60000, 'CLIENTE_DESISTIU');
+      } else {
+        mudarStatus(pedido, 'CONFIRMADO', criadoMs + 2 * 60000);
+        mudarStatus(pedido, 'EM_PREPARO', criadoMs + 4 * 60000);
+        mudarStatus(pedido, 'PRONTO', criadoMs + (25 + Math.floor(s.numero() * 15)) * 60000);
+        mudarStatus(pedido, 'CONCLUIDO', criadoMs + 50 * 60000);
+      }
+    }
+  }
+}
+
 export function criarEstadoInicial(agoraMs) {
   const estado = {
     versao: VERSAO_DADOS,
@@ -101,6 +183,8 @@ export function criarEstadoInicial(agoraMs) {
       produto._disponivelFinal = disponivel;
     });
   });
+
+  gerarHistorico(estado, agoraMs, produtoPorNome);
 
   PEDIDOS.forEach(([minutosAtras, nome, telefone, modalidade, pagamento, itens, bairro, endereco, troco, obs, etapas]) => {
     const criadoMs = agoraMs - minutosAtras * 60000;

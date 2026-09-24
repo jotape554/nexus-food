@@ -16,6 +16,7 @@ const AcompanhamentoPedido = lazy(() => import('./pages/public/AcompanhamentoPed
 const Pedidos = lazy(() => import('./pages/Pedidos'));
 const Cardapio = lazy(() => import('./pages/Cardapio'));
 const Clientes = lazy(() => import('./pages/Clientes'));
+const Relatorios = lazy(() => import('./pages/Relatorios'));
 const Configuracoes = lazy(() => import('./pages/Configuracoes'));
 const Assinatura = lazy(() => import('./pages/Assinatura'));
 
@@ -94,6 +95,7 @@ export function Rotas() {
           <Route path="pedidos" element={<Pedidos />} />
           <Route path="cardapio" element={<Cardapio />} />
           <Route path="clientes" element={<Clientes />} />
+          <Route path="relatorios" element={<Relatorios />} />
           <Route path="configuracoes" element={<Configuracoes />} />
           <Route path="assinatura" element={<Assinatura />} />
         </Route>

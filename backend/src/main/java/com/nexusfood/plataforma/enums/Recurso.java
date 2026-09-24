@@ -13,7 +13,9 @@ import lombok.Getter;
 public enum Recurso {
     CARDAPIO(PlanoSaas.BASICO),
     PEDIDOS(PlanoSaas.BASICO),
-    CLIENTES(PlanoSaas.BASICO);
+    CLIENTES(PlanoSaas.BASICO),
+    // Na Fase 5 o Básico fica limitado ao histórico recente; por enquanto todos os planos acessam.
+    RELATORIOS(PlanoSaas.BASICO);
 
     private final PlanoSaas planoMinimo;
 

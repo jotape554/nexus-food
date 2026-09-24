@@ -1,6 +1,7 @@
 import { criarEstadoInicial, VERSAO_DADOS } from './dadosIniciais';
 import { dinheiro, diaOperacional, ErroRegra } from './regras';
 import { criarPedido, mudarStatus, paraAcompanhamento, paraPainel, proximoId, USUARIO_DEMO } from './servico';
+import { gerarRelatorio } from './relatorio';
 
 /**
  * "Backend" da demonstração: atende no navegador as mesmas rotas que o frontend chama, com os
@@ -288,6 +289,16 @@ const ROTAS = [
     mudarStatus(pedido, b.status, agora(), b.motivoCancelamento);
     salvar();
     return paraPainel(estado, pedido, true);
+  }],
+
+  // relatórios
+  ['GET', /^\/api\/relatorios\/vendas$/, (_m, q) => {
+    try {
+      return gerarRelatorio(estado, q, agora());
+    } catch (e) {
+      if (e.regra) throw invalido(e.message);
+      throw e;
+    }
   }],
 
   // páginas do cliente final
