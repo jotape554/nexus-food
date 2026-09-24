@@ -442,15 +442,19 @@ label {
   .auth-recursos { grid-template-columns: 1fr; }
 }
 
-/* No celular: só a marca e a chamada, curtas, em cima do formulário. */
+.auth-rodape-celular { display: none; }
+
+/* No celular: cabeçalho curto (marca + chamada) e o resto da apresentação some ou desce. */
 @media (max-width: 860px) {
   .auth-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .auth-apresentacao { gap: 10px; padding: 22px 20px 26px; }
-  .auth-chamada h2 { font-size: 1.25rem; margin-bottom: 6px; }
-  .auth-chamada p { font-size: 0.88rem; }
-  .auth-recursos, .auth-amostra { display: none; }
-  .auth-rodape { margin-top: 8px; font-size: 0.8rem; }
-  .auth-formulario { align-items: flex-start; padding: 20px 16px 32px; }
+  .auth-apresentacao { gap: 8px; padding: 16px 20px 18px; }
+  .auth-marca .logo-simbolo { width: 26px; height: 26px; }
+  .auth-marca .logo-nome { font-size: 1.15rem; }
+  .auth-chamada h2 { font-size: 1rem; line-height: 1.35; margin: 0; color: rgba(239, 235, 226, 0.85); }
+  .auth-chamada p, .auth-recursos, .auth-amostra, .auth-rodape { display: none; }
+  .auth-formulario { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 18px; padding: 16px 16px 28px; }
+  .auth-formulario .auth-card { max-width: none; }
+  .auth-rodape-celular { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--texto-suave); text-align: center; }
   .auth-formulario .auth-card { padding: 28px 22px; }
 }
 

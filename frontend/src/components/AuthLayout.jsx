@@ -76,6 +76,11 @@ export default function AuthLayout({ children }) {
 
       <main className="auth-formulario">
         {children}
+        {/* No celular o rodapé da apresentação desce para cá, e o cabeçalho escuro fica curto. */}
+        <div className="auth-rodape-celular">
+          <span>Teste grátis por 14 dias, sem cartão de crédito.</span>
+          <AssinaturaNexus tom="claro" />
+        </div>
       </main>
     </div>
   );
