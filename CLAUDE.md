@@ -1,6 +1,7 @@
 # Nexus Food — guia para quem mexe no código
 
-SaaS de pedidos para restaurantes (multi-tenant) com Nexus Analytics. Produto separado do
+SaaS de pedidos para restaurantes (multi-tenant) com Nexus Analytics. Produto da **Nexus Sistemas**:
+a assinatura aparece via `components/AssinaturaNexus` e os dados da marca ficam em `frontend/src/marca.js`. Produto separado do
 BarberFlow, criado a partir da mesma base de plataforma. O plano de arquitetura aprovado está em
 `docs/PLANO_ARQUITETURA.md` — leia antes de mudar qualquer regra de negócio.
 

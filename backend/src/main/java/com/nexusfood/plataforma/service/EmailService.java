@@ -57,6 +57,9 @@ public class EmailService {
                 %s
 
                 Se você não pediu isso, pode ignorar este e-mail — sua senha continua a mesma.
+
+                —
+                Nexus Food · um produto Nexus Sistemas
                 """.formatted(link);
 
         Map<String, Object> corpo = Map.of(

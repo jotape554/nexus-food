@@ -1,5 +1,7 @@
 # Nexus Food
 
+**Um produto [Nexus Sistemas](https://www.instagram.com/nexussistemas.co/).**
+
 Sistema de pedidos para restaurantes (SaaS multi-tenant): cardápio digital com link próprio,
 pedidos com acompanhamento em tempo real, painel de pedidos para a equipe e, nas próximas
 fases, relatórios de vendas e o **Nexus Analytics** (Nexus Score e insights).

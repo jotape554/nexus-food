@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/http';
+import AssinaturaNexus from '../../components/AssinaturaNexus';
 
 export default function RedefinirSenha() {
   const [searchParams] = useSearchParams();
@@ -78,6 +79,7 @@ export default function RedefinirSenha() {
           <Link to="/login">Voltar para o login</Link>
         </div>
       </div>
+      <AssinaturaNexus />
     </div>
   );
 }

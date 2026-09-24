@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import AssinaturaNexus from '../../components/AssinaturaNexus';
 
 export default function Registro() {
   const { registrar } = useAuth();
@@ -80,6 +81,7 @@ export default function Registro() {
           Já tem conta? <Link to="/login">Entrar</Link>
         </div>
       </div>
+      <AssinaturaNexus />
     </div>
   );
 }

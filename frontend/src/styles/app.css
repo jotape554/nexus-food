@@ -966,3 +966,40 @@ label {
   .grade-relatorio { grid-template-columns: 1fr; }
   .segmentado { margin-left: 0; }
 }
+
+/* ---------- assinatura Nexus Sistemas (mesmo desenho do site da Nexus) ---------- */
+
+:root {
+  --nexus-cobalto: #3B82F6;
+  --nexus-ciano: #22D3EE;
+  --nexus-degrade: linear-gradient(135deg, var(--nexus-cobalto), var(--nexus-ciano));
+  --fonte-nexus: 'Space Grotesk', 'Inter', -apple-system, sans-serif;
+}
+
+.assinatura-nexus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 0.78rem;
+  text-decoration: none;
+  color: var(--texto-suave);
+}
+.assinatura-nexus .assinatura-marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--fonte-nexus);
+  font-weight: 700;
+  color: var(--texto);
+  letter-spacing: -0.01em;
+}
+.assinatura-nexus.escuro { color: rgba(239, 235, 226, 0.5); }
+.assinatura-nexus.escuro .assinatura-marca { color: rgba(239, 235, 226, 0.85); }
+.assinatura-nexus:hover .assinatura-marca { text-decoration: underline; text-underline-offset: 3px; }
+.ponto-nexus { width: 8px; height: 8px; border-radius: 50%; background: var(--nexus-degrade); flex-shrink: 0; }
+
+.auth-shell { flex-direction: column; gap: 20px; }
+.sidebar-assinatura { justify-content: flex-start; padding: 12px 10px 0; }
+.rodape-publico { display: flex; justify-content: center; padding: 16px 0 8px; }

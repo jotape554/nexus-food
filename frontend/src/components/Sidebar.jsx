@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AssinaturaNexus from './AssinaturaNexus';
 
 const ITENS = [
   { to: '/painel/pedidos', label: 'Pedidos', icone: '◱' },
@@ -43,6 +44,7 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      <AssinaturaNexus tom="escuro" className="sidebar-assinatura" />
       <div className="sidebar-footer">
         <div className="avatar">{iniciais(usuario?.nome)}</div>
         <div style={{ flex: 1, minWidth: 0 }}>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api/http';
+import AssinaturaNexus from '../../components/AssinaturaNexus';
 
 export default function EsqueciSenha() {
   const [email, setEmail] = useState('');
@@ -50,6 +51,7 @@ export default function EsqueciSenha() {
           <Link to="/login">Voltar para o login</Link>
         </div>
       </div>
+      <AssinaturaNexus />
     </div>
   );
 }

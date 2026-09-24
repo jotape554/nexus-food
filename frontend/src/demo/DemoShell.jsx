@@ -5,6 +5,7 @@ import { AuthProvider } from '../context/AuthContext';
 import { Rotas } from '../App';
 import { aoMudar, reiniciarDemonstracao } from './apiFalsa';
 import { SLUG_DEMO } from './dadosIniciais';
+import AssinaturaNexus from '../components/AssinaturaNexus';
 import './demo.css';
 
 const LARGURA_LADO_A_LADO = '(min-width: 1280px)';
@@ -79,6 +80,7 @@ export default function DemoShell() {
           <div className="demo-marca">
             <strong>Nexus<span>Food</span></strong>
             <span className="demo-selo">demonstração</span>
+            <AssinaturaNexus tom="escuro" prefixo="por" className="demo-assinatura" />
           </div>
 
           <nav className="demo-visoes" aria-label="O que mostrar">

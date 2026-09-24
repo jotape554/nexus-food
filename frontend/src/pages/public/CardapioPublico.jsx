@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/http';
 import { moeda, MODALIDADE_LABEL, PAGAMENTO_LABEL } from '../../api/formato';
 import Icone, { ICONE_MODALIDADE, ICONE_PAGAMENTO } from '../../components/Icone';
+import AssinaturaNexus from '../../components/AssinaturaNexus';
 import '../../styles/public.css';
 
 const ETAPAS_CHECKOUT = [
@@ -269,6 +270,9 @@ export default function CardapioPublico() {
               ))}
             </section>
           ))}
+          <footer className="rodape-publico">
+            <AssinaturaNexus prefixo="Pedidos online com Nexus Food · um produto" />
+          </footer>
           {quantidadeTotal > 0 && (
             <button className="barra-sacola" onClick={() => irPara('sacola')}>
               <span>Ver sacola ({quantidadeTotal})</span>

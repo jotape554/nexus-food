@@ -1,5 +1,6 @@
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import Icone from '../../components/Icone';
+import AssinaturaNexus from '../../components/AssinaturaNexus';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api/http';
 import { moeda, hora, numeroPedido, MODALIDADE_LABEL, PAGAMENTO_LABEL, MOTIVO_CANCELAMENTO_LABEL } from '../../api/formato';
@@ -138,6 +139,9 @@ export default function AcompanhamentoPedido() {
             <Link className="btn btn-latao" to={`/r/${pedido.restauranteSlug}`}>Fazer outro pedido</Link>
           </div>
         </div>
+        <footer className="rodape-publico">
+          <AssinaturaNexus prefixo="Pedidos online com Nexus Food · um produto" />
+        </footer>
       </main>
     </div>
   );
